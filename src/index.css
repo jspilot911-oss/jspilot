@@ -1,0 +1,467 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* Modern Soft Pastel Design Tokens */
+  --bg-app: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFAFD;
+  
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --primary-light: #F3E8FF;
+  --primary-border: #DDD6FE;
+  
+  --pastel-lavender: #EDE9FE;
+  --pastel-lavender-text: #4C1D95;
+  --pastel-blue: #E0F2FE;
+  --pastel-blue-text: #0369A1;
+  --pastel-pink: #FCE7F3;
+  --pastel-pink-text: #9F1239;
+  --pastel-mint: #D1FAE5;
+  --pastel-mint-text: #065F46;
+  --pastel-amber: #FEF3C7;
+  --pastel-amber-text: #92400E;
+  
+  /* Priority Colors */
+  --priority-critical-bg: #FEE2E2;
+  --priority-critical-text: #7F1D1D;
+  --priority-critical-border: #FCA5A5;
+
+  --priority-high-bg: #FFEDD5;
+  --priority-high-text: #7C2D12;
+  --priority-high-border: #FDBA74;
+
+  --priority-medium-bg: #FEF9C3;
+  --priority-medium-text: #713F12;
+  --priority-medium-border: #FDE047;
+
+  --priority-low-bg: #DCFCE7;
+  --priority-low-text: #14532D;
+  --priority-low-border: #86EFAC;
+
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  
+  --border-color: #E2E8F0;
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+/* Soft Slate Dark Mode (Lighter Medium Slate) */
+.dark {
+  --bg-app: #1E293B;       /* Soft Slate Dark 800 */
+  --bg-card: #334155;      /* Soft Slate Card 700 */
+  --bg-card-hover: #475569;/* Slate 600 */
+  --primary: #818CF8;
+  --primary-hover: #6366F1;
+  --primary-light: #312E81;
+  --text-main: #F8FAFC;
+  --text-muted: #CBD5E1;
+  --border-color: #475569;
+  color-scheme: dark;
+}
+
+/* 1. Pastel Lavender Theme */
+.theme-cyber {
+  --bg-app: #F3E8FF;       /* Rich Soft Lavender Background */
+  --bg-card: #FAF5FF;      /* Pastel Crisp Card */
+  --bg-card-hover: #EDE9FE;/* Lavender Hover */
+  --primary: #9333EA;      /* Vibrant Purple Accent */
+  --primary-hover: #7E22CE;
+  --primary-light: #EDE9FE;
+  --text-main: #3B0764;    /* Deep Purple Heading/Text */
+  --text-muted: #6B21A8;   /* Muted Violet Text */
+  --border-color: #D8B4FE; /* Soft Pastel Lavender Border */
+  color-scheme: light;
+}
+
+/* 2. Pastel Sky Blue Theme */
+.theme-ocean {
+  --bg-app: #E0F2FE;       /* Rich Soft Sky Blue Background */
+  --bg-card: #F0F9FF;      /* Pastel Crisp Card */
+  --bg-card-hover: #BAE6FD;/* Sky Hover */
+  --primary: #0284C7;      /* Vibrant Cyan Accent */
+  --primary-hover: #0369A1;
+  --primary-light: #E0F2FE;
+  --text-main: #0C4A6E;    /* Deep Sky Blue Text */
+  --text-muted: #0369A1;   /* Muted Sky Text */
+  --border-color: #7DD3FC; /* Soft Pastel Sky Border */
+  color-scheme: light;
+}
+
+/* 3. Pastel Mint Emerald Theme */
+.theme-emerald {
+  --bg-app: #D1FAE5;       /* Rich Soft Mint Green Background */
+  --bg-card: #ECFDF5;      /* Pastel Crisp Card */
+  --bg-card-hover: #A7F3D0;/* Mint Hover */
+  --primary: #059669;      /* Vibrant Emerald Accent */
+  --primary-hover: #047857;
+  --primary-light: #D1FAE5;
+  --text-main: #064E3B;    /* Deep Emerald Text */
+  --text-muted: #047857;   /* Muted Mint Text */
+  --border-color: #6EE7B7; /* Soft Pastel Mint Border */
+  color-scheme: light;
+}
+
+/* 4. Pastel Candy Pink Theme */
+.theme-rose {
+  --bg-app: #FCE7F3;       /* Rich Soft Candy Pink Background */
+  --bg-card: #FFF1F2;      /* Pastel Crisp Card */
+  --bg-card-hover: #FBCFE8;/* Pink Hover */
+  --primary: #E11D48;      /* Vibrant Candy Pink Accent */
+  --primary-hover: #BE123C;
+  --primary-light: #FCE7F3;
+  --text-main: #881337;    /* Deep Rose Text */
+  --text-muted: #9F1239;   /* Muted Pink Text */
+  --border-color: #F472B6; /* Soft Pastel Pink Border */
+  color-scheme: light;
+}
+
+/* 5. Pastel Sunshine Amber Theme */
+.theme-amber {
+  --bg-app: #FEF3C7;       /* Rich Soft Warm Amber Background */
+  --bg-card: #FFFBEB;      /* Pastel Crisp Card */
+  --bg-card-hover: #FDE68A;/* Amber Hover */
+  --primary: #D97706;      /* Vibrant Warm Amber Accent */
+  --primary-hover: #B45309;
+  --primary-light: #FEF3C7;
+  --text-main: #78350F;    /* Deep Amber Text */
+  --text-muted: #92400E;   /* Muted Amber Text */
+  --border-color: #FCD34D; /* Soft Pastel Amber Border */
+  color-scheme: light;
+}
+
+/* 6. Pastel Peach Coral Theme */
+.theme-peach {
+  --bg-app: #FFEDD5;       /* Rich Soft Peach Coral Background */
+  --bg-card: #FFF7ED;      /* Pastel Crisp Card */
+  --bg-card-hover: #FDBA74;/* Peach Hover */
+  --primary: #EA580C;      /* Vibrant Coral Accent */
+  --primary-hover: #C2410C;
+  --primary-light: #FFEDD5;
+  --text-main: #7C2D12;    /* Deep Coral Text */
+  --text-muted: #9A3412;   /* Muted Peach Text */
+  --border-color: #FB923C; /* Soft Pastel Peach Border */
+  color-scheme: light;
+}
+
+/* Dynamic Pastel Theme Surface & Container Styling */
+[class*="theme-"] body {
+  background-color: var(--bg-app) !important;
+  color: var(--text-main) !important;
+}
+
+[class*="theme-"] .bg-white,
+[class*="theme-"] .bg-slate-50,
+[class*="theme-"] .card {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+[class*="theme-"] .border-slate-100,
+[class*="theme-"] .border-slate-200,
+[class*="theme-"] .border-slate-300 {
+  border-color: var(--border-color) !important;
+}
+
+[class*="theme-"] .text-slate-900,
+[class*="theme-"] .text-slate-800,
+[class*="theme-"] .text-slate-700 {
+  color: var(--text-main) !important;
+}
+
+[class*="theme-"] .text-slate-500,
+[class*="theme-"] .text-slate-600 {
+  color: var(--text-muted) !important;
+}
+
+[class*="theme-"] header,
+[class*="theme-"] nav {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Theme accent overrides for buttons, badges, icons & gradients */
+[class*="theme-"] .bg-purple-50,
+[class*="theme-"] .bg-purple-100,
+[class*="theme-"] .bg-purple-200,
+[class*="theme-"] .bg-purple-950\/40 {
+  background-color: var(--primary-light) !important;
+}
+
+[class*="theme-"] .text-purple-600,
+[class*="theme-"] .text-purple-700,
+[class*="theme-"] .text-purple-800,
+[class*="theme-"] .text-purple-900,
+[class*="theme-"] .text-purple-950 {
+  color: var(--primary) !important;
+}
+
+[class*="theme-"] .fill-purple-600 {
+  fill: var(--primary) !important;
+}
+
+[class*="theme-"] .border-purple-200,
+[class*="theme-"] .border-purple-300,
+[class*="theme-"] .border-purple-400,
+[class*="theme-"] .border-purple-800 {
+  border-color: var(--border-color) !important;
+}
+
+[class*="theme-"] .bg-purple-600,
+[class*="theme-"] .btn-primary {
+  background-color: var(--primary) !important;
+  color: #FFFFFF !important;
+}
+
+[class*="theme-"] .from-purple-600 {
+  --tw-gradient-from: var(--primary) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 255, 255, 0)) !important;
+}
+
+[class*="theme-"] .to-indigo-600,
+[class*="theme-"] .to-pink-600 {
+  --tw-gradient-to: var(--primary-hover) !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Glassmorphism & Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+}
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(12px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.3); }
+  70% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Card utilities */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.badge-critical {
+  background: var(--priority-critical-bg);
+  color: var(--priority-critical-text);
+  border: 1px solid var(--priority-critical-border);
+}
+
+.badge-high {
+  background: var(--priority-high-bg);
+  color: var(--priority-high-text);
+  border: 1px solid var(--priority-high-border);
+}
+
+.badge-medium {
+  background: var(--priority-medium-bg);
+  color: var(--priority-medium-text);
+  border: 1px solid var(--priority-medium-border);
+}
+
+.badge-low {
+  background: var(--priority-low-bg);
+  color: var(--priority-low-text);
+  border: 1px solid var(--priority-low-border);
+}
+
+.badge-lavender {
+  background: var(--pastel-lavender);
+  color: var(--pastel-lavender-text);
+}
+
+.badge-blue {
+  background: var(--pastel-blue);
+  color: var(--pastel-blue-text);
+}
+
+.badge-pink {
+  background: var(--pastel-pink);
+  color: var(--pastel-pink-text);
+}
+
+.badge-mint {
+  background: var(--pastel-mint);
+  color: var(--pastel-mint-text);
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #E2E8F0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.dark .progress-bar-bg {
+  background-color: #1F2937;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease-out;
+  background: linear-gradient(90deg, #7C3AED 0%, #C084FC 100%);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+.dark .form-control {
+  background: #111827;
+  color: #F8FAFC;
+  border-color: #374151;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px #F3E8FF;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background-color: #7C3AED;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: #6D28D9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+}
+.dark .btn-secondary {
+  background-color: #1F2937;
+  color: #F8FAFC;
+  border-color: #374151;
+}
+
+.btn-secondary:hover {
+  background-color: #F1F5F9;
+}
+.dark .btn-secondary:hover {
+  background-color: #374151;
+}
+
+.btn-danger {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.btn-danger:hover {
+  background-color: #FCA5A5;
+}
