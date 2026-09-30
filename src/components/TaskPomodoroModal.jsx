@@ -171,7 +171,7 @@ export default function TaskPomodoroModal({
           setIsMinimized(false);
           window.dispatchEvent(new CustomEvent('reopen_pomodoro'));
         }}
-        className="fixed bottom-6 right-6 z-50 bg-slate-950/95 text-white backdrop-blur-md rounded-2xl border-2 border-purple-500 shadow-2xl p-3 px-4 flex items-center gap-3.5 cursor-pointer hover:border-pink-400 transition-all group animate-fade-in"
+        className="fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-50 bg-slate-950/95 text-white backdrop-blur-md rounded-2xl border-2 border-purple-500 shadow-2xl p-3 px-4 flex items-center gap-3.5 cursor-pointer hover:border-pink-400 transition-all group animate-fade-in"
         title="Click to expand Pomodoro Timer"
       >
         {/* Pulsing Flame Icon */}

@@ -38,12 +38,13 @@ import { generateSchedule, formatDateKey } from './engine/schedulerEngine.js';
 import { rescheduleMissedTasks, rescheduleTasksToCustomDate } from './engine/reschedulerEngine.js';
 import { calculatePriority } from './engine/priorityEngine.js';
 
-import { 
-  Calendar as CalendarIcon, 
-  CheckSquare, 
-  BarChart2, 
-  Zap, 
-  Lock
+import {
+  Calendar as CalendarIcon,
+  CheckSquare,
+  BarChart2,
+  Zap,
+  Lock,
+  Plus
 } from 'lucide-react';
 
 export default function App() {
@@ -76,10 +77,10 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState(formatDateKey(new Date()));
   const [activeTab, setActiveTab] = useState('daily');
   const [user, setUser] = useState(null);
-  
+
   // Page View Controller ('dashboard', 'pricing', 'unlock_page', 'payment_success', 'payment_failed')
   const [currentView, setCurrentView] = useState('dashboard');
-  
+
   // Subscription Modals & Checkout State
   const [selectedPlanToBuy, setSelectedPlanToBuy] = useState('PRO');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -113,7 +114,7 @@ export default function App() {
     return () => window.removeEventListener('reopen_pomodoro', handleReopen);
   }, []);
 
-  const handleLoginSuccess = (userData, mode) => {
+  const handleLoginSuccess = async (userData, mode) => {
     const isOwner = userData?.role === 'owner' || userData?.isOwner || (userData?.email && (userData.email.toLowerCase().includes('owner') || userData.email.toLowerCase().includes('admin')));
     const finalUserData = isOwner ? { ...userData, current_plan: 'PRO', role: 'owner', isOwner: true } : userData;
 
@@ -121,7 +122,7 @@ export default function App() {
     SubscriptionService.saveUser(finalUserData);
 
     // Register user in Database & Dispatch SMTP Transmission Log
-    SmtpService.registerUserDatabase(finalUserData, mode);
+    await SmtpService.registerUserDatabase(finalUserData, mode);
 
     // Load clean workspace for this signed-in user (0 previous plans/tasks)
     const userPlans = StorageService.loadPlans(userData.user_id);
@@ -130,8 +131,8 @@ export default function App() {
     setActivePlanId(activeId);
 
     setCurrentView('dashboard');
-    showToast(mode === 'register' 
-      ? `✨ Account registered & logged in SMTP Database! Fresh workspace initialized.` 
+    showToast(mode === 'register'
+      ? `✨ Account registered & logged in SMTP Database! Fresh workspace initialized.`
       : `✨ Welcome back, ${userData.name}! Clean workspace ready.`
     );
   };
@@ -250,7 +251,7 @@ export default function App() {
 
       const tempPlan = { ...activePlan, scheduleMap: newScheduleMap };
       const { plan: rescheduledPlan, notification, rescheduledChanges } = rescheduleMissedTasks(tempPlan, selectedDate);
-      
+
       updateActivePlan(rescheduledPlan);
       setActiveRescheduledChanges(rescheduledChanges || []);
       setIsRescheduleSummaryOpen(true);
@@ -305,7 +306,7 @@ export default function App() {
 
   const handleConfirmReset = () => {
     if (!activePlan) return;
-    
+
     // Reset progress on current plan's subjects and general tasks cleanly
     const resetSubjects = (activePlan.subjects || []).map(s => ({
       ...s,
@@ -407,7 +408,7 @@ export default function App() {
 
     const updatedGeneralTasks = [...(activePlan.generalTasks || []), newTask];
     const updatedPlanRaw = { ...activePlan, generalTasks: updatedGeneralTasks };
-    
+
     const gen = generateSchedule(updatedPlanRaw);
     const fullUpdatedPlan = { ...updatedPlanRaw, ...gen };
 
@@ -488,6 +489,18 @@ export default function App() {
     showToast(`👑 Owner Action: User plan updated to ${newPlan}!`);
   };
 
+  const handleUpdateProfile = (updatedFields) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      ...updatedFields
+    };
+    setUser(updatedUser);
+    SubscriptionService.saveUser(updatedUser);
+    SmtpService.registerUserDatabase(updatedUser, 'update_profile');
+    showToast('✨ User profile details updated successfully!');
+  };
+
   // View Page Switcher Routing
   if (currentView === 'login' || !user) {
     return (
@@ -548,7 +561,7 @@ export default function App() {
   // Default Workspace Dashboard View
   return (
     <div className={`${theme} min-h-screen bg-slate-50 dark:bg-[#090D16] flex flex-col font-sans text-slate-900 dark:text-slate-100 pb-16 transition-colors`}>
-      
+
       {/* Top Navigation Navbar */}
       <Navbar
         plans={plans}
@@ -579,9 +592,9 @@ export default function App() {
       )}
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 w-full">
-        
-        {/* Freemium Upgrade Banner */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 md:pb-8 flex-1 w-full">
+
+        {/* Pro Upgrade Banner with 7-Day Free Trial */}
         <FreeUpgradeBanner
           user={user}
           onExplorePro={() => setCurrentView('unlock_page')}
@@ -613,15 +626,14 @@ export default function App() {
         />
 
         {/* Main View Navigation Tabs */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 mb-6">
-          <div className="flex items-center gap-2 sm:gap-6">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-max">
             <button
               onClick={() => setActiveTab('daily')}
-              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'daily'
-                  ? 'border-purple-600 text-purple-700 dark:text-purple-400'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-              }`}
+              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${activeTab === 'daily'
+                ? 'border-purple-600 text-purple-700 dark:text-purple-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
             >
               <CheckSquare className="w-4 h-4" />
               <span>Daily Dashboard</span>
@@ -631,11 +643,10 @@ export default function App() {
               onClick={() => {
                 gateFeature('calendar_view', () => setActiveTab('calendar'));
               }}
-              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'calendar'
-                  ? 'border-purple-600 text-purple-700 dark:text-purple-400'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-              }`}
+              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${activeTab === 'calendar'
+                ? 'border-purple-600 text-purple-700 dark:text-purple-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
             >
               <CalendarIcon className="w-4 h-4" />
               <span>Calendar View</span>
@@ -644,11 +655,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('progress')}
-              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${
-                activeTab === 'progress'
-                  ? 'border-purple-600 text-purple-700 dark:text-purple-400'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
-              }`}
+              className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${activeTab === 'progress'
+                ? 'border-purple-600 text-purple-700 dark:text-purple-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
             >
               <BarChart2 className="w-4 h-4" />
               <span>Progress Analytics</span>
@@ -707,6 +717,69 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Mobile Bottom Navigation Dock (Phone View) */}
+      {currentView === 'dashboard' && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40 px-3 py-2 flex items-center justify-around shadow-2xl">
+          <button
+            onClick={() => setActiveTab('daily')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'daily'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <CheckSquare className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Tasks</span>
+          </button>
+
+          <button
+            onClick={() => gateFeature('calendar_view', () => setActiveTab('calendar'))}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'calendar'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <CalendarIcon className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Calendar</span>
+          </button>
+
+          {/* Floating Action Button for Quick Add */}
+          <button
+            onClick={() => setIsQuickAddOpen(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-lg transform -translate-y-3 border-2 border-white dark:border-slate-900 active:scale-95 transition-all"
+            title="Add Quick Task"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'progress'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <BarChart2 className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Progress</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('pricing')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              currentView === 'pricing'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <Zap className="w-5 h-5 text-amber-500 fill-amber-400" />
+            <span className="text-[10px] mt-0.5">Plans</span>
+          </button>
+        </nav>
+      )}
+
 
       {/* Plan Wizard Modal */}
       <PlanWizardModal
@@ -792,6 +865,7 @@ export default function App() {
         onOpenPricing={() => setCurrentView('pricing')}
         onLogout={handleLogout}
         onUpdateUserPlan={handleOwnerUpdateUserPlan}
+        onUpdateProfile={handleUpdateProfile}
       />
 
       {/* Interactive App Feature Walkthrough Tutorial Modal */}

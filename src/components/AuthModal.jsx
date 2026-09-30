@@ -9,7 +9,9 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   LogIn, 
-  UserPlus 
+  UserPlus,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { SmtpService } from '../services/smtpService.js';
 
@@ -22,6 +24,7 @@ export default function AuthModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [examCategory, setExamCategory] = useState('');
   const [customExamName, setCustomExamName] = useState('');
   const [examLevel, setExamLevel] = useState('');
@@ -59,18 +62,26 @@ export default function AuthModal({
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
+    const existingUsers = SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
+
     const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
+
+    const resolvedGoal = mode === 'register'
+      ? (fullGoal.trim() || 'General Tasks & Habits')
+      : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
+
     const userData = {
-      user_id: `usr_${Date.now()}`,
-      name: mode === 'register' ? name.trim() : (email.split('@')[0] || 'User'),
+      user_id: existingUser?.user_id || `usr_${Date.now()}`,
+      name: mode === 'register' ? name.trim() : (existingUser?.name || email.split('@')[0] || 'User'),
       email: email.trim(),
-      targetGoal: fullGoal,
-      current_plan: 'PRO',
-      subscription_status: isOwner ? 'active' : 'trial',
-      subscription_start: new Date().toISOString(),
-      trial_start: new Date().toISOString(),
-      trial_end: trialEnd.toISOString(),
-      role: isOwner ? 'owner' : 'user',
+      targetGoal: resolvedGoal,
+      current_plan: existingUser?.current_plan || 'PRO',
+      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'trial'),
+      subscription_start: existingUser?.subscription_start || new Date().toISOString(),
+      trial_start: existingUser?.trial_start || new Date().toISOString(),
+      trial_end: existingUser?.trial_end || trialEnd.toISOString(),
+      role: isOwner ? 'owner' : (existingUser?.role || 'user'),
       isOwner
     };
 
@@ -79,13 +90,22 @@ export default function AuthModal({
   };
 
   const handleDemoLogin = (demoName, demoEmail) => {
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 7);
+
+    const existingUsers = SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
+
     const userData = {
-      user_id: `usr_demo_${Date.now()}`,
+      user_id: existingUser?.user_id || `usr_demo_${Date.now()}`,
       name: demoName,
       email: demoEmail,
-      current_plan: 'FREE',
-      subscription_status: 'active',
-      subscription_start: new Date().toISOString()
+      targetGoal: existingUser?.targetGoal || existingUser?.target_goal || 'General Tasks & Habits',
+      current_plan: 'PRO',
+      subscription_status: 'trial',
+      subscription_start: new Date().toISOString(),
+      trial_start: new Date().toISOString(),
+      trial_end: trialEnd.toISOString()
     };
     onLoginSuccess(userData, 'login');
     onClose();
@@ -109,8 +129,8 @@ export default function AuthModal({
 
         {/* Modal Header Branding */}
         <div className="text-center space-y-2 mb-6 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1.5 border border-purple-200 dark:border-purple-800/80 shadow-md mx-auto flex items-center justify-center overflow-hidden">
-            <img src="/logo.png" alt="JSPilot Logo" className="w-full h-full object-contain" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-900/90 p-1.5 border border-purple-400/30 shadow-md mx-auto flex items-center justify-center overflow-hidden">
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="JSPilot Logo" className="w-full h-full object-contain" />
           </div>
 
           <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -195,14 +215,24 @@ export default function AuthModal({
               <Lock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>Password</span>
             </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="form-control"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="form-control pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors p-1"
+                title={showPassword ? 'Hide Password' : 'Show Password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {mode === 'register' && (
@@ -219,17 +249,18 @@ export default function AuthModal({
                   className="form-control"
                 >
                   <option value="" disabled>-- Select Goal / Exam Category --</option>
+                  <option value="Business & Profession">Business & Profession</option>
                   <option value="CA">CA (Chartered Accountancy)</option>
-                  <option value="CS">CS (Company Secretary)</option>
                   <option value="CMA">CMA (Cost & Management Accountant)</option>
-                  <option value="SSC">SSC (Staff Selection Commission)</option>
-                  <option value="UPSC">UPSC (Civil Services)</option>
+                  <option value="CS">CS (Company Secretary)</option>
+                  <option value="General Tasks & Habits">General Tasks & Habits</option>
                   <option value="JEE">JEE (Engineering Entrance)</option>
                   <option value="NEET">NEET (Medical Entrance)</option>
-                  <option value="University Studies">University Studies</option>
                   <option value="Software / Work Projects">Software / Work Projects</option>
-                  <option value="General Tasks & Habits">General Tasks & Habits</option>
-                  <option value="Other">Other (Type Custom Exam)</option>
+                  <option value="SSC">SSC (Staff Selection Commission)</option>
+                  <option value="University Studies">University Studies</option>
+                  <option value="UPSC">UPSC (Civil Services)</option>
+                  <option value="Other">Other (Type Custom Category)</option>
                 </select>
               </div>
 
@@ -249,7 +280,7 @@ export default function AuthModal({
                 </div>
               )}
 
-              {['CA', 'CS', 'CMA', 'SSC', 'UPSC', 'JEE', 'NEET', 'Other'].includes(examCategory) && (
+              {['Business & Profession', 'CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC', 'Other'].includes(examCategory) && (
                 <div className="form-group mb-0">
                   <label className="form-label text-xs text-slate-700 dark:text-slate-300">
                     <span>Exam Level / Stage</span>

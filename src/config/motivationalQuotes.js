@@ -42,9 +42,9 @@ export const MOTIVATIONAL_QUOTES = [
   },
   {
     id: 7,
-    quote: "Future rewards require present discipline. Your target exam is closer than you think!",
+    quote: "Future rewards require present discipline. Your target goal is closer than you think!",
     author: "JSPilot Engine",
-    category: "Exam Motivation 🏆"
+    category: "Goal Motivation 🏆"
   },
   {
     id: 8,

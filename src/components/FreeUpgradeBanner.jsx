@@ -46,9 +46,12 @@ export default function FreeUpgradeBanner({
         <div>
           <h3 className="text-sm sm:text-base font-black text-purple-950 dark:text-white flex items-center gap-2">
             <span>Upgrade to JSPilot Pro</span>
+            <span className="text-[10px] bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black px-2.5 py-0.5 rounded-full shadow-xs">
+              🎁 7-Day Free Trial
+            </span>
           </h3>
           <p className="text-xs text-slate-800 dark:text-slate-200 font-bold mt-0.5">
-            Tell JSPilot what you need to finish. It builds the plan for you.
+            Tell JSPilot what you need to finish. It builds the plan for you. Try Pro features free for 7 days!
           </p>
         </div>
       </div>
@@ -57,7 +60,7 @@ export default function FreeUpgradeBanner({
         onClick={onExplorePro}
         className="btn bg-purple-700 hover:bg-purple-800 text-white text-xs font-black py-2.5 px-4 rounded-xl shadow-md shrink-0 self-end sm:self-center flex items-center gap-1.5"
       >
-        <span>Explore Pro</span>
+        <span>Start 7-Day Free Trial</span>
         <ArrowRight className="w-4 h-4 text-white" />
       </button>
 

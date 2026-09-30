@@ -26,9 +26,6 @@ export default function MotivationalQuoteBanner({ selectedDate }) {
               <Sparkles className="w-3 h-3 text-pink-300" />
               <span>DAILY MOTIVATION THOUGHT</span>
             </span>
-            <span className="text-[10px] font-black uppercase tracking-wider bg-purple-500/30 text-purple-200 border border-purple-500/40 px-2 py-0.5 rounded-full">
-              {activeQuote.category}
-            </span>
           </div>
 
           <div className="flex items-start gap-2.5">

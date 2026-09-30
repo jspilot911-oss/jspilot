@@ -93,7 +93,7 @@ export default function SubscriptionManagementModal({
               className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2"
             >
               <Zap className="w-4 h-4 text-pink-300 fill-pink-300" />
-              <span>Upgrade to Smart Planner Pro (₹99/mo)</span>
+              <span>Upgrade to Smart Planner Pro (₹49/mo)</span>
             </button>
           ) : (
             <div className="space-y-2">
