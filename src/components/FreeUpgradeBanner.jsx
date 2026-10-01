@@ -82,6 +82,43 @@ export default function FreeUpgradeBanner({
     );
   }
 
+  const isExpired = user?.subscription_status === 'expired';
+
+  if (!isTrialActive && !isExpired) {
+    return (
+      <div className="card p-4 sm:p-5 mb-6 bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 dark:from-slate-900 dark:via-purple-950/60 dark:to-slate-900 border-2 border-purple-300 dark:border-purple-800 text-slate-900 dark:text-white shadow-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white shrink-0 shadow-md">
+            <Sparkles className="w-5 h-5 text-white animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="text-sm sm:text-base font-black text-purple-950 dark:text-purple-200">
+                Free Plan Active
+              </h3>
+              <span className="text-[10px] bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 font-black px-2.5 py-0.5 rounded-full">
+                FREE USER
+              </span>
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
+              You are currently on the Free Plan. Start your 7-Day Free PRO Trial anytime to unlock all features!
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onExplorePro}
+          className="btn bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-black py-2.5 px-4 rounded-xl shadow-md shrink-0 self-end sm:self-center flex items-center gap-1.5"
+        >
+          <span>🚀 Start 7-Day Free Trial</span>
+          <ArrowRight className="w-4 h-4 text-white" />
+        </button>
+
+      </div>
+    );
+  }
+
   // Trial Expired (Reverted to Free Plan)
   return (
     <div className="card p-4 sm:p-5 mb-6 bg-gradient-to-r from-amber-500/10 via-red-500/10 to-purple-500/10 border-2 border-amber-500/40 text-slate-900 dark:text-white shadow-sm rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -100,7 +137,7 @@ export default function FreeUpgradeBanner({
             </span>
           </div>
           <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">
-            Your 7-day registration trial ended on <strong>{formattedEndDate}</strong>. Subscribe now to unlock unlimited plans, calendar view, and auto-rescheduling!
+            Your 7-day trial ended on <strong>{formattedEndDate}</strong>. Subscribe now to unlock unlimited plans, calendar view, and auto-rescheduling!
           </p>
         </div>
       </div>
