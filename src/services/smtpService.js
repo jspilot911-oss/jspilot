@@ -48,6 +48,26 @@ export const SmtpService = {
   },
 
   /**
+   * Generate Sequential User Account ID Series (e.g. USR-1001, USR-1002, USR-1003)
+   */
+  generateNextUserId(existingUsers = []) {
+    let maxSeq = 1000;
+    (existingUsers || []).forEach(u => {
+      if (u.user_id) {
+        const match = u.user_id.match(/USR-(\d+)/i) || u.user_id.match(/usr_(\d+)/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq && num < 10000000) {
+            maxSeq = num;
+          }
+        }
+      }
+    });
+    const nextSeq = maxSeq + 1;
+    return `USR-${String(nextSeq).padStart(4, '0')}`;
+  },
+
+  /**
    * Register User in Database & Dispatch SMTP Email Notification
    */
   async registerUserDatabase(userData, mode = 'register') {
@@ -60,7 +80,7 @@ export const SmtpService = {
     const isPaidUser = plan === 'PRO' || plan === 'YEARLY';
 
     const dbRecord = {
-      user_id: userData.user_id || existing?.user_id || `usr_${Date.now()}`,
+      user_id: userData.user_id || existing?.user_id || this.generateNextUserId(existingUsers),
       name: userData.name || userData.email.split('@')[0],
       email: userData.email,
       target_goal: userData.targetGoal || 'General Planning',

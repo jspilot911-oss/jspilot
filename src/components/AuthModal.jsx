@@ -91,7 +91,7 @@ export default function AuthModal({
       : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
 
     const userData = {
-      user_id: existingUser?.user_id || `usr_${Date.now()}`,
+      user_id: existingUser?.user_id || SmtpService.generateNextUserId(existingUsers),
       name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
       email: formattedEmail,
       targetGoal: resolvedGoal,
@@ -116,7 +116,7 @@ export default function AuthModal({
     const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
 
     const userData = {
-      user_id: existingUser?.user_id || `usr_demo_${Date.now()}`,
+      user_id: existingUser?.user_id || SmtpService.generateNextUserId(existingUsers),
       name: demoName,
       email: demoEmail,
       targetGoal: existingUser?.targetGoal || existingUser?.target_goal || 'General Tasks & Habits',
