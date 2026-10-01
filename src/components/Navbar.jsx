@@ -11,6 +11,7 @@ import {
   LogOut,
   Database,
   HelpCircle,
+  MessageSquare,
   Palette,
   SlidersHorizontal
 } from 'lucide-react';
@@ -138,6 +139,17 @@ export default function Navbar({
               <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
               <span>App Tour</span>
             </button>
+
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdAsHe9gkodxeSkOQL4mCeSJfgsTlZwExzTFD9lBiCtMwmBJg/viewform?usp=header"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800 text-xs font-black py-2 px-3 flex items-center justify-center gap-1.5 hover:bg-pink-100 transition-all"
+              title="Give Feedback"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+              <span>Feedback</span>
+            </a>
           </div>
 
           {/* Utility Icons & Profile */}
@@ -299,6 +311,17 @@ export default function Navbar({
                 <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
                 <span>App Tour</span>
               </button>
+
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdAsHe9gkodxeSkOQL4mCeSJfgsTlZwExzTFD9lBiCtMwmBJg/viewform?usp=header"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMobileActionsOpen(false)}
+                className="btn bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800 text-xs font-black py-2 px-3 flex items-center justify-center gap-1.5"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+                <span>Feedback</span>
+              </a>
             </div>
 
             {/* Owner & Account Links */}
