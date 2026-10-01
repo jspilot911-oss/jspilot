@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  Mail, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldCheck, 
-  LogIn, 
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  LogIn,
   UserPlus,
   Eye,
   EyeOff
@@ -32,7 +32,7 @@ export default function AuthModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -46,13 +46,12 @@ export default function AuthModal({
       return;
     }
 
-    if (mode === 'register') {
-      const existingUsers = SmtpService.getUserDatabase();
-      const duplicate = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
-      if (duplicate) {
-        setErrorMsg('An account with this email address already exists. Please sign in instead.');
-        return;
-      }
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
+
+    if (mode === 'register' && existingUser) {
+      setErrorMsg('An account with this email address already exists. Please sign in instead.');
+      return;
     }
 
     const fullGoal = examCategory === 'Other'
@@ -61,9 +60,6 @@ export default function AuthModal({
 
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
-
-    const existingUsers = SmtpService.getUserDatabase();
-    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
 
     const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
 
@@ -89,11 +85,11 @@ export default function AuthModal({
     onClose();
   };
 
-  const handleDemoLogin = (demoName, demoEmail) => {
+  const handleDemoLogin = async (demoName, demoEmail) => {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
-    const existingUsers = SmtpService.getUserDatabase();
+    const existingUsers = await SmtpService.getUserDatabase();
     const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
 
     const userData = {
@@ -114,7 +110,7 @@ export default function AuthModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-6 sm:p-8 relative text-slate-900 dark:text-slate-100 max-h-[90vh] overflow-y-auto">
-        
+
         {/* Ambient Glow */}
         <div className="absolute -right-16 -top-16 w-48 h-48 bg-purple-300/30 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-pink-300/30 dark:bg-pink-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -146,11 +142,10 @@ export default function AuthModal({
         <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700 relative z-10">
           <button
             onClick={() => { setMode('login'); setErrorMsg(''); }}
-            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'login'
-                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'login'
+              ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Sign In</span>
@@ -158,11 +153,10 @@ export default function AuthModal({
 
           <button
             onClick={() => { setMode('register'); setErrorMsg(''); }}
-            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'register'
-                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'register'
+              ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Register</span>

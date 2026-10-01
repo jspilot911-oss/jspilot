@@ -66,7 +66,7 @@ export default function SmtpDatabaseLogsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-4xl p-6 sm:p-8 relative text-slate-900 dark:text-slate-100 max-h-[90vh] flex flex-col">
-
+        
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4 shrink-0">
           <div className="flex items-center gap-3">
@@ -108,10 +108,11 @@ export default function SmtpDatabaseLogsModal({
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-4 shrink-0 border border-slate-200 dark:border-slate-700">
           <button
             onClick={() => setActiveTab('database')}
-            className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'database'
+            className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'database'
                 ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+            }`}
           >
             <Database className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             <span>User Database ({users.length})</span>
@@ -119,10 +120,11 @@ export default function SmtpDatabaseLogsModal({
 
           <button
             onClick={() => setActiveTab('smtp_logs')}
-            className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'smtp_logs'
+            className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'smtp_logs'
                 ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+            }`}
           >
             <Mail className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>SMTP Email Transcripts ({logs.length})</span>
@@ -189,19 +191,21 @@ export default function SmtpDatabaseLogsModal({
                                 <option value="PRO">✨ PRO USER</option>
                                 <option value="YEARLY">👑 YEARLY PRO</option>
                               </select>
-
+                              
                               <div className="flex items-center gap-1 text-[9px] font-black">
                                 <button
                                   onClick={() => handleSetPlan(u, 'PRO')}
-                                  className={`px-2 py-0.5 rounded border transition-all ${isPaid ? 'bg-purple-600 text-white border-purple-600' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 dark:bg-purple-950 dark:text-purple-300'
-                                    }`}
+                                  className={`px-2 py-0.5 rounded border transition-all ${
+                                    isPaid ? 'bg-purple-600 text-white border-purple-600' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200 dark:bg-purple-950 dark:text-purple-300'
+                                  }`}
                                 >
                                   Set PRO
                                 </button>
                                 <button
                                   onClick={() => handleSetPlan(u, 'FREE')}
-                                  className={`px-2 py-0.5 rounded border transition-all ${!isPaid ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-300 dark:bg-slate-800 dark:text-slate-300'
-                                    }`}
+                                  className={`px-2 py-0.5 rounded border transition-all ${
+                                    !isPaid ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-300 dark:bg-slate-800 dark:text-slate-300'
+                                  }`}
                                 >
                                   Set FREE
                                 </button>
@@ -256,7 +260,7 @@ export default function SmtpDatabaseLogsModal({
         {/* Tab Content 2: SMTP Logs & Transcripts */}
         {activeTab === 'smtp_logs' && (
           <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
-
+            
             {/* Left Logs List */}
             <div className="md:col-span-1 overflow-y-auto space-y-2 pr-1 border-r border-slate-100 dark:border-slate-800">
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Dispatched SMTP Emails</p>
@@ -267,10 +271,11 @@ export default function SmtpDatabaseLogsModal({
                   <button
                     key={log.log_id}
                     onClick={() => setSelectedLog(log)}
-                    className={`w-full text-left p-3 rounded-2xl border transition-all text-xs ${selectedLog?.log_id === log.log_id
+                    className={`w-full text-left p-3 rounded-2xl border transition-all text-xs ${
+                      selectedLog?.log_id === log.log_id
                         ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-950 dark:text-white font-bold shadow-xs'
                         : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100'
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-extrabold text-[11px] truncate max-w-[140px]">{log.recipient_name}</span>

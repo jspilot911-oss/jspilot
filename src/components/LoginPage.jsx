@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Mail, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldCheck, 
-  LogIn, 
+import {
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  LogIn,
   UserPlus,
   Brain,
   Target,
@@ -36,7 +36,7 @@ export default function LoginPage({
   const [examLevel, setExamLevel] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -50,13 +50,12 @@ export default function LoginPage({
       return;
     }
 
-    if (mode === 'register') {
-      const existingUsers = SmtpService.getUserDatabase();
-      const duplicate = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
-      if (duplicate) {
-        setErrorMsg('An account with this email address already exists. Please sign in instead.');
-        return;
-      }
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
+
+    if (mode === 'register' && existingUser) {
+      setErrorMsg('An account with this email address already exists. Please sign in instead.');
+      return;
     }
 
     const fullGoal = examCategory === 'Other'
@@ -65,9 +64,6 @@ export default function LoginPage({
 
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
-
-    const existingUsers = SmtpService.getUserDatabase();
-    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
 
     const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
 
@@ -92,12 +88,12 @@ export default function LoginPage({
     onLoginSuccess(userData, mode);
   };
 
-  const handleDemoLogin = (demoName, demoEmail, role = 'user') => {
+  const handleDemoLogin = async (demoName, demoEmail, role = 'user') => {
     const isOwner = role === 'owner' || demoEmail.toLowerCase().includes('owner') || demoEmail.toLowerCase().includes('admin');
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
-    const existingUsers = SmtpService.getUserDatabase();
+    const existingUsers = await SmtpService.getUserDatabase();
     const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
 
     const userData = {
@@ -118,7 +114,7 @@ export default function LoginPage({
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark bg-[#090D16] text-white' : 'bg-slate-50 text-slate-900'} flex flex-col justify-between font-sans relative overflow-hidden transition-colors`}>
-      
+
       {/* Background Ambient Glows */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-32 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -152,7 +148,7 @@ export default function LoginPage({
 
       {/* Main Login / Register Area */}
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row items-center justify-center gap-12 relative z-10">
-        
+
         {/* Left Hero Content */}
         <div className="flex-1 space-y-6 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-black border border-purple-200 dark:border-purple-800">
@@ -197,7 +193,7 @@ export default function LoginPage({
 
         {/* Right Form Card */}
         <div className="w-full max-w-md bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 backdrop-blur-xl relative">
-          
+
           <div className="text-center space-y-1 mb-6">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white">
               {mode === 'login' ? 'Sign In to Your Account' : 'Create Free Account'}
@@ -212,11 +208,10 @@ export default function LoginPage({
             <button
               type="button"
               onClick={() => { setMode('login'); setErrorMsg(''); }}
-              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'login'
+              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'login'
                   ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In</span>
@@ -225,11 +220,10 @@ export default function LoginPage({
             <button
               type="button"
               onClick={() => { setMode('register'); setErrorMsg(''); }}
-              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'register'
+              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'register'
                   ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Register</span>
