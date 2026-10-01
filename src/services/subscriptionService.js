@@ -29,11 +29,27 @@ export const SubscriptionService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_USER);
       if (stored) {
-        const u = JSON.parse(stored);
-        if (u && (u.subscription_status === 'trial' || !u.current_plan)) {
-          u.current_plan = PLAN_IDS.PRO;
+        let u = JSON.parse(stored);
+        if (u) {
+          const now = new Date();
+          const trialEndDate = u.trial_end ? new Date(u.trial_end) : null;
+          const isPaidOrOwner = u.subscription_status === 'active' || u.role === 'owner' || u.isOwner || (u.email && (u.email.toLowerCase().includes('owner') || u.email.toLowerCase().includes('admin')));
+
+          if (isPaidOrOwner) {
+            u.current_plan = u.current_plan || PLAN_IDS.PRO;
+            u.subscription_status = 'active';
+          } else if (trialEndDate && now > trialEndDate) {
+            // 7-Day trial expired for free user! Revert to FREE plan unless subscribed
+            u.current_plan = PLAN_IDS.FREE;
+            u.subscription_status = 'expired';
+            this.saveUser(u);
+          } else {
+            // Still within 7-Day Free Trial
+            u.current_plan = PLAN_IDS.PRO;
+            u.subscription_status = 'trial';
+          }
+          return u;
         }
-        return u;
       }
     } catch (e) {
       console.error('Failed to load user profile:', e);
@@ -62,16 +78,17 @@ export const SubscriptionService = {
    */
   hasProAccess(user) {
     if (!user) return false;
-    const plan = user.current_plan || PLAN_IDS.FREE;
-    if (plan === PLAN_IDS.FREE) return false;
 
-    const status = user.subscription_status || 'active';
+    const isOwner = user.role === 'owner' || user.isOwner || (user.email && (user.email.toLowerCase().includes('owner') || user.email.toLowerCase().includes('admin')));
+    if (isOwner) return true;
 
-    if (status === 'active') return true;
+    if (user.subscription_status === 'active' && user.current_plan !== PLAN_IDS.FREE) {
+      return true;
+    }
 
-    if (status === 'trial') {
+    if (user.subscription_status === 'trial') {
       if (!user.trial_end) return true;
-      return new Date(user.trial_end) > new Date();
+      return new Date() <= new Date(user.trial_end);
     }
 
     return false;

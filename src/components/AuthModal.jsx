@@ -32,11 +32,32 @@ export default function AuthModal({
 
   if (!isOpen) return null;
 
+  // Format email to default to @gmail.com if domain is omitted
+  const formatEmailWithDefaultDomain = (inputEmail) => {
+    let trimmed = (inputEmail || '').trim();
+    if (!trimmed) return '';
+    if (!trimmed.includes('@')) {
+      return `${trimmed}@gmail.com`;
+    }
+    if (trimmed.endsWith('@')) {
+      return `${trimmed}gmail.com`;
+    }
+    return trimmed;
+  };
+
+  const handleEmailBlur = () => {
+    if (email.trim()) {
+      setEmail(formatEmailWithDefaultDomain(email));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email.trim() || !password.trim()) {
+    const formattedEmail = formatEmailWithDefaultDomain(email);
+
+    if (!formattedEmail || !password.trim()) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
@@ -46,8 +67,10 @@ export default function AuthModal({
       return;
     }
 
+    setEmail(formattedEmail);
+
     const existingUsers = await SmtpService.getUserDatabase();
-    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === formattedEmail.toLowerCase());
 
     if (mode === 'register' && existingUser) {
       setErrorMsg('An account with this email address already exists. Please sign in instead.');
@@ -61,7 +84,7 @@ export default function AuthModal({
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
-    const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
+    const isOwner = formattedEmail.toLowerCase().includes('owner') || formattedEmail.toLowerCase().includes('admin');
 
     const resolvedGoal = mode === 'register'
       ? (fullGoal.trim() || 'General Tasks & Habits')
@@ -69,8 +92,8 @@ export default function AuthModal({
 
     const userData = {
       user_id: existingUser?.user_id || `usr_${Date.now()}`,
-      name: mode === 'register' ? name.trim() : (existingUser?.name || email.split('@')[0] || 'User'),
-      email: email.trim(),
+      name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
+      email: formattedEmail,
       targetGoal: resolvedGoal,
       current_plan: existingUser?.current_plan || 'PRO',
       subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'trial'),
@@ -195,13 +218,18 @@ export default function AuthModal({
               <span>Email Address</span>
             </label>
             <input
-              type="email"
+              type="text"
+              inputMode="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
+              onBlur={handleEmailBlur}
+              placeholder="user@gmail.com"
               className="form-control"
             />
+            <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+              💡 "@gmail.com" will be appended automatically if omitted.
+            </p>
           </div>
 
           <div className="form-group">
