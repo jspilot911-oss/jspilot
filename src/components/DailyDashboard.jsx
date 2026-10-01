@@ -80,6 +80,55 @@ export default function DailyDashboard({
     }
   };
 
+  if (!plan || !plan.scheduleMap) {
+    return (
+      <div className="card p-8 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Active Study Plan</h3>
+        <p className="text-slate-600 dark:text-slate-400 mb-6">Create a study plan to view your daily schedule.</p>
+        <button
+          onClick={onOpenWizard}
+          className="btn btn-primary inline-flex items-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span>Generate Plan</span>
+        </button>
+      </div>
+    );
+  }
+
+  const dayData = plan.scheduleMap[selectedDate] || {
+    date: selectedDate,
+    dayName: 'Today',
+    availableHours: plan.availableHoursPerDay || 4,
+    slots: []
+  };
+
+  const slots = dayData.slots || [];
+
+  const filteredSlots = slots.filter(slot => {
+    if (priorityFilter === 'all') return true;
+    return slot.priority && slot.priority.level === priorityFilter;
+  });
+
+  const completedSlotsCount = slots.filter(s => s.completed).length;
+  const totalSlotsCount = slots.length;
+  const todayProgressPercent = totalSlotsCount > 0 
+    ? Math.round((completedSlotsCount / totalSlotsCount) * 100) 
+    : 0;
+
+  const handleCheckboxClick = (slotId, currentCompletedState) => {
+    const nextState = !currentCompletedState;
+    onToggleTaskCompleted(selectedDate, slotId);
+
+    if (nextState && completedSlotsCount + 1 === totalSlotsCount) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    }
+  };
+
   const dateObj = new Date(selectedDate);
   const formattedDisplayDate = isNaN(dateObj.getTime())
     ? selectedDate
