@@ -13,12 +13,15 @@ import {
 } from 'lucide-react';
 import { SUBSCRIPTION_PLANS, COMPARISON_FEATURES, PLAN_IDS } from '../config/subscriptionPlans.js';
 
+import logoImg from '../assets/logo.png';
+
 export default function PricingPage({
   user,
   onSelectPlanToBuy,
   onBackToDashboard
 }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
+  const isFreeUser = !user?.current_plan || user?.current_plan === PLAN_IDS.FREE;
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900 animate-fade-in">
@@ -35,7 +38,7 @@ export default function PricingPage({
 
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-white p-0.5 border border-purple-200 shadow-sm flex items-center justify-center overflow-hidden">
-            <img src="/logo.png" alt="JSPilot Logo" className="w-full h-full object-contain" />
+            <img src={logoImg} alt="JSPilot Logo" className="w-full h-full object-contain" />
           </div>
           <span className="text-sm font-extrabold text-slate-800">JSPilot</span>
         </div>
@@ -45,7 +48,7 @@ export default function PricingPage({
       <div className="max-w-4xl mx-auto text-center space-y-4 mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200">
           <Zap className="w-3.5 h-3.5 fill-purple-600 text-purple-600" />
-          <span>Freemium SaaS Pricing &bull; Cancel Anytime</span>
+          <span>7-Day Free Trial Included &bull; Pro SaaS Pricing &bull; Cancel Anytime</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
@@ -56,7 +59,7 @@ export default function PricingPage({
         </h1>
 
         <p className="text-sm sm:text-base text-slate-600 font-medium max-w-2xl mx-auto">
-          Plan. Prioritize. Track. Reschedule. Achieve. Upgrade to unlock dynamic automatic scheduling, missed task recovery, and unlimited plans.
+          Plan. Prioritize. Track. Reschedule. Achieve. Start your 7-Day Free Trial of Pro to unlock dynamic automatic scheduling, missed task recovery, and unlimited plans.
         </p>
 
         {/* Monthly vs Yearly Billing Toggle */}
@@ -116,6 +119,12 @@ export default function PricingPage({
                 <Check className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Basic priority tags</span>
               </li>
+              {isFreeUser && (
+                <li className="flex items-center gap-2 font-bold text-purple-700 bg-purple-50 p-2 rounded-xl border border-purple-200">
+                  <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Includes 7-Day Free Trial of PRO for all new users</span>
+                </li>
+              )}
               <li className="flex items-center gap-2 text-slate-400">
                 <X className="w-4 h-4 shrink-0" />
                 <span className="line-through">Automatic rescheduling</span>
@@ -140,15 +149,31 @@ export default function PricingPage({
           </div>
 
           <div>
-            <h3 className="text-lg font-extrabold text-purple-900 mt-2">PRO</h3>
+            <div className="flex items-center justify-between mt-2">
+              <h3 className="text-lg font-extrabold text-purple-900">PRO</h3>
+              {isFreeUser && (
+                <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-200">
+                  🎁 7-Day Free Trial
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.PRO.description}</p>
 
             <div className="my-6">
-              <span className="text-4xl font-extrabold text-slate-900">₹99</span>
+              <span className="text-4xl font-extrabold text-slate-900">₹49</span>
               <span className="text-xs text-slate-500 font-medium ml-1">/ month</span>
+              {isFreeUser && (
+                <p className="text-[11px] font-extrabold text-purple-600 mt-1">7 Days Free Trial, then ₹49/month</p>
+              )}
             </div>
 
             <ul className="space-y-2.5 text-xs text-slate-700 mb-6">
+              {isFreeUser && (
+                <li className="flex items-center gap-2 font-bold text-purple-900 bg-purple-50 p-2 rounded-xl border border-purple-200">
+                  <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>7-Day Free Trial for all new users</span>
+                </li>
+              )}
               <li className="flex items-center gap-2 font-bold text-purple-900">
                 <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
                 <span>Everything in FREE +</span>
@@ -178,9 +203,9 @@ export default function PricingPage({
 
           <button
             onClick={() => onSelectPlanToBuy(PLAN_IDS.PRO)}
-            className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/30"
+            className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
           >
-            {user?.current_plan === PLAN_IDS.PRO ? 'Current Active Plan' : 'Start Pro'}
+            {user?.current_plan === PLAN_IDS.PRO ? 'Current Active Plan' : 'Start 7-Day Free Trial'}
           </button>
         </div>
 
@@ -196,10 +221,10 @@ export default function PricingPage({
             <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.YEARLY.description}</p>
 
             <div className="my-6">
-              <span className="text-4xl font-extrabold text-slate-900">₹799</span>
+              <span className="text-4xl font-extrabold text-slate-900">₹499</span>
               <span className="text-xs text-slate-500 font-medium ml-1">/ year</span>
-              <div className="text-[11px] font-bold text-pink-600 mt-1">
-                Save ₹389 compared to monthly!
+              <div className="text-[11px] font-bold text-purple-600 mt-1">
+                Standard Annual Plan (~₹41/month)
               </div>
             </div>
 

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  Mail, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldCheck, 
-  LogIn, 
-  UserPlus 
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  LogIn,
+  UserPlus,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { SmtpService } from '../services/smtpService.js';
 
@@ -22,6 +24,7 @@ export default function AuthModal({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [examCategory, setExamCategory] = useState('');
   const [customExamName, setCustomExamName] = useState('');
   const [examLevel, setExamLevel] = useState('');
@@ -29,11 +32,32 @@ export default function AuthModal({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  // Format email to default to @gmail.com if domain is omitted
+  const formatEmailWithDefaultDomain = (inputEmail) => {
+    let trimmed = (inputEmail || '').trim();
+    if (!trimmed) return '';
+    if (!trimmed.includes('@')) {
+      return `${trimmed}@gmail.com`;
+    }
+    if (trimmed.endsWith('@')) {
+      return `${trimmed}gmail.com`;
+    }
+    return trimmed;
+  };
+
+  const handleEmailBlur = () => {
+    if (email.trim()) {
+      setEmail(formatEmailWithDefaultDomain(email));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email.trim() || !password.trim()) {
+    const formattedEmail = formatEmailWithDefaultDomain(email);
+
+    if (!formattedEmail || !password.trim()) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
@@ -43,13 +67,14 @@ export default function AuthModal({
       return;
     }
 
-    if (mode === 'register') {
-      const existingUsers = SmtpService.getUserDatabase();
-      const duplicate = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
-      if (duplicate) {
-        setErrorMsg('An account with this email address already exists. Please sign in instead.');
-        return;
-      }
+    setEmail(formattedEmail);
+
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === formattedEmail.toLowerCase());
+
+    if (mode === 'register' && existingUser) {
+      setErrorMsg('An account with this email address already exists. Please sign in instead.');
+      return;
     }
 
     const fullGoal = examCategory === 'Other'
@@ -59,18 +84,23 @@ export default function AuthModal({
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
-    const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
+    const isOwner = formattedEmail.toLowerCase().includes('owner') || formattedEmail.toLowerCase().includes('admin');
+
+    const resolvedGoal = mode === 'register'
+      ? (fullGoal.trim() || 'General Tasks & Habits')
+      : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
+
     const userData = {
-      user_id: `usr_${Date.now()}`,
-      name: mode === 'register' ? name.trim() : (email.split('@')[0] || 'User'),
-      email: email.trim(),
-      targetGoal: fullGoal,
-      current_plan: 'PRO',
-      subscription_status: isOwner ? 'active' : 'trial',
-      subscription_start: new Date().toISOString(),
-      trial_start: new Date().toISOString(),
-      trial_end: trialEnd.toISOString(),
-      role: isOwner ? 'owner' : 'user',
+      user_id: existingUser?.user_id || `usr_${Date.now()}`,
+      name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
+      email: formattedEmail,
+      targetGoal: resolvedGoal,
+      current_plan: existingUser?.current_plan || 'PRO',
+      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'trial'),
+      subscription_start: existingUser?.subscription_start || new Date().toISOString(),
+      trial_start: existingUser?.trial_start || new Date().toISOString(),
+      trial_end: existingUser?.trial_end || trialEnd.toISOString(),
+      role: isOwner ? 'owner' : (existingUser?.role || 'user'),
       isOwner
     };
 
@@ -78,14 +108,23 @@ export default function AuthModal({
     onClose();
   };
 
-  const handleDemoLogin = (demoName, demoEmail) => {
+  const handleDemoLogin = async (demoName, demoEmail) => {
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 7);
+
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
+
     const userData = {
-      user_id: `usr_demo_${Date.now()}`,
+      user_id: existingUser?.user_id || `usr_demo_${Date.now()}`,
       name: demoName,
       email: demoEmail,
-      current_plan: 'FREE',
-      subscription_status: 'active',
-      subscription_start: new Date().toISOString()
+      targetGoal: existingUser?.targetGoal || existingUser?.target_goal || 'General Tasks & Habits',
+      current_plan: 'PRO',
+      subscription_status: 'trial',
+      subscription_start: new Date().toISOString(),
+      trial_start: new Date().toISOString(),
+      trial_end: trialEnd.toISOString()
     };
     onLoginSuccess(userData, 'login');
     onClose();
@@ -94,7 +133,7 @@ export default function AuthModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-6 sm:p-8 relative text-slate-900 dark:text-slate-100 max-h-[90vh] overflow-y-auto">
-        
+
         {/* Ambient Glow */}
         <div className="absolute -right-16 -top-16 w-48 h-48 bg-purple-300/30 dark:bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-pink-300/30 dark:bg-pink-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -109,8 +148,8 @@ export default function AuthModal({
 
         {/* Modal Header Branding */}
         <div className="text-center space-y-2 mb-6 relative z-10">
-          <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 p-1.5 border border-purple-200 dark:border-purple-800/80 shadow-md mx-auto flex items-center justify-center overflow-hidden">
-            <img src="/logo.png" alt="JSPilot Logo" className="w-full h-full object-contain" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-900/90 p-1.5 border border-purple-400/30 shadow-md mx-auto flex items-center justify-center overflow-hidden">
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="JSPilot Logo" className="w-full h-full object-contain" />
           </div>
 
           <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -126,11 +165,10 @@ export default function AuthModal({
         <div className="grid grid-cols-2 gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-6 border border-slate-200 dark:border-slate-700 relative z-10">
           <button
             onClick={() => { setMode('login'); setErrorMsg(''); }}
-            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'login'
-                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'login'
+              ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Sign In</span>
@@ -138,11 +176,10 @@ export default function AuthModal({
 
           <button
             onClick={() => { setMode('register'); setErrorMsg(''); }}
-            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'register'
-                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'register'
+              ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Register</span>
@@ -181,13 +218,18 @@ export default function AuthModal({
               <span>Email Address</span>
             </label>
             <input
-              type="email"
+              type="text"
+              inputMode="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
+              onBlur={handleEmailBlur}
+              placeholder="user@gmail.com"
               className="form-control"
             />
+            <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+              💡 "@gmail.com" will be appended automatically if omitted.
+            </p>
           </div>
 
           <div className="form-group">
@@ -195,14 +237,24 @@ export default function AuthModal({
               <Lock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>Password</span>
             </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="form-control"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="form-control pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors p-1"
+                title={showPassword ? 'Hide Password' : 'Show Password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {mode === 'register' && (
@@ -219,17 +271,18 @@ export default function AuthModal({
                   className="form-control"
                 >
                   <option value="" disabled>-- Select Goal / Exam Category --</option>
+                  <option value="Business & Profession">Business & Profession</option>
                   <option value="CA">CA (Chartered Accountancy)</option>
-                  <option value="CS">CS (Company Secretary)</option>
                   <option value="CMA">CMA (Cost & Management Accountant)</option>
-                  <option value="SSC">SSC (Staff Selection Commission)</option>
-                  <option value="UPSC">UPSC (Civil Services)</option>
+                  <option value="CS">CS (Company Secretary)</option>
+                  <option value="General Tasks & Habits">General Tasks & Habits</option>
                   <option value="JEE">JEE (Engineering Entrance)</option>
                   <option value="NEET">NEET (Medical Entrance)</option>
-                  <option value="University Studies">University Studies</option>
                   <option value="Software / Work Projects">Software / Work Projects</option>
-                  <option value="General Tasks & Habits">General Tasks & Habits</option>
-                  <option value="Other">Other (Type Custom Exam)</option>
+                  <option value="SSC">SSC (Staff Selection Commission)</option>
+                  <option value="University Studies">University Studies</option>
+                  <option value="UPSC">UPSC (Civil Services)</option>
+                  <option value="Other">Other (Type Custom Category)</option>
                 </select>
               </div>
 
@@ -249,7 +302,7 @@ export default function AuthModal({
                 </div>
               )}
 
-              {['CA', 'CS', 'CMA', 'SSC', 'UPSC', 'JEE', 'NEET', 'Other'].includes(examCategory) && (
+              {['Business & Profession', 'CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC', 'Other'].includes(examCategory) && (
                 <div className="form-group mb-0">
                   <label className="form-label text-xs text-slate-700 dark:text-slate-300">
                     <span>Exam Level / Stage</span>

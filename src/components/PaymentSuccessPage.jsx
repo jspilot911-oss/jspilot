@@ -16,7 +16,7 @@ export default function PaymentSuccessPage({
 
   const planName = subscription?.plan || 'PRO';
   const paymentRef = subscription?.payment_reference || 'PAY_SAMPLE_8923';
-  const amount = subscription?.amount || 99;
+  const amount = subscription?.amount || 49;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900 animate-fade-in">

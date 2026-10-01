@@ -42,16 +42,25 @@ export default function NotificationsDrawer({
               notifications.map((notif) => (
                 <div
                   key={notif.id}
-                  className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 space-y-1"
+                  className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/70 space-y-2 shadow-2xs"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1">
                       <Zap className="w-3 h-3 text-purple-600 dark:text-purple-400 fill-purple-600 dark:fill-purple-400" />
-                      Smart Rescheduler
+                      {notif.source || 'Smart Notification'}
                     </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{notif.timestamp}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">{notif.timestamp}</span>
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
+
+                  {/* Due Date & Time Badge */}
+                  {notif.dueInfo && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
+                      <Clock className="w-3 h-3 text-indigo-500" />
+                      <span>Due: {notif.dueInfo}</span>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-700 dark:text-slate-200 font-bold leading-relaxed">
                     {notif.message}
                   </p>
                 </div>

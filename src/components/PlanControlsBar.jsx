@@ -48,7 +48,7 @@ export default function PlanControlsBar({
       </div>
 
       {/* Control Buttons Group */}
-      <div className="flex items-center flex-wrap gap-2">
+      <div className="grid grid-cols-2 xs:grid-cols-3 sm:flex sm:items-center sm:flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">
         {/* Create Plan */}
         <button
           onClick={onOpenWizard}

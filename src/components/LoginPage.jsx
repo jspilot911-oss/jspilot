@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  Mail, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldCheck, 
-  LogIn, 
+import {
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  ShieldCheck,
+  LogIn,
   UserPlus,
   Brain,
   Target,
   Zap,
   Sun,
-  Moon
+  Moon,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { SmtpService } from '../services/smtpService.js';
+
+import logoImg from '../assets/logo.png';
 
 export default function LoginPage({
   onLoginSuccess,
@@ -26,16 +30,38 @@ export default function LoginPage({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [examCategory, setExamCategory] = useState('');
   const [customExamName, setCustomExamName] = useState('');
   const [examLevel, setExamLevel] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e) => {
+  // Format email to default to @gmail.com if domain is omitted
+  const formatEmailWithDefaultDomain = (inputEmail) => {
+    let trimmed = (inputEmail || '').trim();
+    if (!trimmed) return '';
+    if (!trimmed.includes('@')) {
+      return `${trimmed}@gmail.com`;
+    }
+    if (trimmed.endsWith('@')) {
+      return `${trimmed}gmail.com`;
+    }
+    return trimmed;
+  };
+
+  const handleEmailBlur = () => {
+    if (email.trim()) {
+      setEmail(formatEmailWithDefaultDomain(email));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email.trim() || !password.trim()) {
+    const formattedEmail = formatEmailWithDefaultDomain(email);
+
+    if (!formattedEmail || !password.trim()) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
@@ -45,13 +71,14 @@ export default function LoginPage({
       return;
     }
 
-    if (mode === 'register') {
-      const existingUsers = SmtpService.getUserDatabase();
-      const duplicate = existingUsers.find(u => u.email && u.email.toLowerCase() === email.trim().toLowerCase());
-      if (duplicate) {
-        setErrorMsg('An account with this email address already exists. Please sign in instead.');
-        return;
-      }
+    setEmail(formattedEmail);
+
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === formattedEmail.toLowerCase());
+
+    if (mode === 'register' && existingUser) {
+      setErrorMsg('An account with this email address already exists. Please sign in instead.');
+      return;
     }
 
     const fullGoal = examCategory === 'Other'
@@ -61,12 +88,42 @@ export default function LoginPage({
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7);
 
-    const isOwner = email.toLowerCase().includes('owner') || email.toLowerCase().includes('admin');
+    const isOwner = formattedEmail.toLowerCase().includes('owner') || formattedEmail.toLowerCase().includes('admin');
+
+    const resolvedGoal = mode === 'register'
+      ? (fullGoal.trim() || 'General Tasks & Habits')
+      : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
+
     const userData = {
-      user_id: `usr_${Date.now()}`,
-      name: mode === 'register' ? name.trim() : (email.split('@')[0] || 'User'),
-      email: email.trim(),
-      targetGoal: fullGoal || 'CA Intermediate',
+      user_id: existingUser?.user_id || `usr_${Date.now()}`,
+      name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
+      email: formattedEmail,
+      targetGoal: resolvedGoal,
+      current_plan: existingUser?.current_plan || 'PRO',
+      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'trial'),
+      subscription_start: existingUser?.subscription_start || new Date().toISOString(),
+      trial_start: existingUser?.trial_start || new Date().toISOString(),
+      trial_end: existingUser?.trial_end || trialEnd.toISOString(),
+      role: isOwner ? 'owner' : (existingUser?.role || 'user'),
+      isOwner
+    };
+
+    onLoginSuccess(userData, mode);
+  };
+
+  const handleDemoLogin = async (demoName, demoEmail, role = 'user') => {
+    const isOwner = role === 'owner' || demoEmail.toLowerCase().includes('owner') || demoEmail.toLowerCase().includes('admin');
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 7);
+
+    const existingUsers = await SmtpService.getUserDatabase();
+    const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
+
+    const userData = {
+      user_id: existingUser?.user_id || `usr_demo_${Date.now()}`,
+      name: demoName,
+      email: demoEmail,
+      targetGoal: existingUser?.targetGoal || existingUser?.target_goal || 'General Tasks & Habits',
       current_plan: 'PRO',
       subscription_status: isOwner ? 'active' : 'trial',
       subscription_start: new Date().toISOString(),
@@ -75,29 +132,12 @@ export default function LoginPage({
       role: isOwner ? 'owner' : 'user',
       isOwner
     };
-
-    onLoginSuccess(userData, mode);
-  };
-
-  const handleDemoLogin = (demoName, demoEmail, role = 'user') => {
-    const isOwner = role === 'owner' || demoEmail.toLowerCase().includes('owner') || demoEmail.toLowerCase().includes('admin');
-    const userData = {
-      user_id: `usr_demo_${Date.now()}`,
-      name: demoName,
-      email: demoEmail,
-      targetGoal: 'CA / Professional Prep',
-      current_plan: isOwner ? 'PRO' : 'FREE',
-      subscription_status: 'active',
-      subscription_start: new Date().toISOString(),
-      role: isOwner ? 'owner' : 'user',
-      isOwner
-    };
     onLoginSuccess(userData, 'login');
   };
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark bg-[#090D16] text-white' : 'bg-slate-50 text-slate-900'} flex flex-col justify-between font-sans relative overflow-hidden transition-colors`}>
-      
+
       {/* Background Ambient Glows */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/2 -right-32 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -107,7 +147,7 @@ export default function LoginPage({
       <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shadow-md border border-purple-200 dark:border-purple-800 shrink-0">
-            <img src="/logo.png" alt="JSPilot Logo" className="w-full h-full object-contain" />
+            <img src={logoImg} alt="JSPilot Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -131,7 +171,7 @@ export default function LoginPage({
 
       {/* Main Login / Register Area */}
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col lg:flex-row items-center justify-center gap-12 relative z-10">
-        
+
         {/* Left Hero Content */}
         <div className="flex-1 space-y-6 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-black border border-purple-200 dark:border-purple-800">
@@ -176,7 +216,7 @@ export default function LoginPage({
 
         {/* Right Form Card */}
         <div className="w-full max-w-md bg-white dark:bg-slate-900/90 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 backdrop-blur-xl relative">
-          
+
           <div className="text-center space-y-1 mb-6">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white">
               {mode === 'login' ? 'Sign In to Your Account' : 'Create Free Account'}
@@ -191,11 +231,10 @@ export default function LoginPage({
             <button
               type="button"
               onClick={() => { setMode('login'); setErrorMsg(''); }}
-              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'login'
-                  ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'login'
+                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In</span>
@@ -204,11 +243,10 @@ export default function LoginPage({
             <button
               type="button"
               onClick={() => { setMode('register'); setErrorMsg(''); }}
-              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                mode === 'register'
-                  ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              className={`py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${mode === 'register'
+                ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Register</span>
@@ -247,13 +285,18 @@ export default function LoginPage({
                 <span>Email Address</span>
               </label>
               <input
-                type="email"
+                type="text"
+                inputMode="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
+                onBlur={handleEmailBlur}
+                placeholder="user@gmail.com"
                 className="form-control"
               />
+              <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                💡 "@gmail.com" will be appended automatically if omitted.
+              </p>
             </div>
 
             <div className="form-group">
@@ -261,14 +304,24 @@ export default function LoginPage({
                 <Lock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>Password</span>
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="form-control"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="********"
+                  className="form-control pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors p-1"
+                  title={showPassword ? 'Hide Password' : 'Show Password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {mode === 'register' && (
@@ -285,17 +338,18 @@ export default function LoginPage({
                     className="form-control"
                   >
                     <option value="" disabled>-- Select Goal / Exam Category --</option>
+                    <option value="Business & Profession">Business & Profession</option>
                     <option value="CA">CA (Chartered Accountancy)</option>
-                    <option value="CS">CS (Company Secretary)</option>
                     <option value="CMA">CMA (Cost & Management Accountant)</option>
-                    <option value="SSC">SSC (Staff Selection Commission)</option>
-                    <option value="UPSC">UPSC (Civil Services)</option>
+                    <option value="CS">CS (Company Secretary)</option>
+                    <option value="General Tasks & Habits">General Tasks & Habits</option>
                     <option value="JEE">JEE (Engineering Entrance)</option>
                     <option value="NEET">NEET (Medical Entrance)</option>
-                    <option value="University Studies">University Studies</option>
                     <option value="Software / Work Projects">Software / Work Projects</option>
-                    <option value="General Tasks & Habits">General Tasks & Habits</option>
-                    <option value="Other">Other (Type Custom Exam)</option>
+                    <option value="SSC">SSC (Staff Selection Commission)</option>
+                    <option value="University Studies">University Studies</option>
+                    <option value="UPSC">UPSC (Civil Services)</option>
+                    <option value="Other">Other (Type Custom Category)</option>
                   </select>
                 </div>
 
@@ -315,7 +369,7 @@ export default function LoginPage({
                   </div>
                 )}
 
-                {['CA', 'CS', 'CMA', 'SSC', 'UPSC', 'JEE', 'NEET', 'Other'].includes(examCategory) && (
+                {['Business & Profession', 'CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC', 'Other'].includes(examCategory) && (
                   <div className="form-group mb-0">
                     <label className="form-label text-xs text-slate-700 dark:text-slate-300">
                       <span>Exam Level / Stage</span>
@@ -346,7 +400,7 @@ export default function LoginPage({
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 dark:text-slate-500 relative z-10">
-        <p>© {new Date().getFullYear()} JSPilot. Automated Planning & Exam Preparation System.</p>
+        <p>&copy; {new Date().getFullYear()} JSPilot. Automated Planning & Exam Preparation System.</p>
       </footer>
 
     </div>

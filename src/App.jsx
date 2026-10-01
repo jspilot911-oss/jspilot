@@ -24,6 +24,7 @@ import SubscriptionManagementModal from './components/SubscriptionManagementModa
 import SmtpDatabaseLogsModal from './components/SmtpDatabaseLogsModal.jsx';
 import UserProfileModal from './components/UserProfileModal.jsx';
 import AppTutorialModal from './components/AppTutorialModal.jsx';
+import StartFreeTrialModal from './components/StartFreeTrialModal.jsx';
 import TaskPomodoroModal from './components/TaskPomodoroModal.jsx';
 import RescheduleSummaryModal from './components/RescheduleSummaryModal.jsx';
 import RescheduleDatePickerModal from './components/RescheduleDatePickerModal.jsx';
@@ -43,7 +44,8 @@ import {
   CheckSquare, 
   BarChart2, 
   Zap, 
-  Lock
+  Lock,
+  Plus
 } from 'lucide-react';
 
 export default function App() {
@@ -94,6 +96,7 @@ export default function App() {
   const [isSmtpModalOpen, setIsSmtpModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [isStartTrialModalOpen, setIsStartTrialModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [editingPlanData, setEditingPlanData] = useState(null);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -113,6 +116,46 @@ export default function App() {
     return () => window.removeEventListener('reopen_pomodoro', handleReopen);
   }, []);
 
+  const handleActivateFreeTrial = () => {
+    if (!user) return;
+    const now = new Date();
+    const trialEnd = new Date();
+    trialEnd.setDate(now.getDate() + 7);
+
+    const updatedUser = {
+      ...user,
+      current_plan: PLAN_IDS.PRO,
+      subscription_status: 'trial',
+      trial_start: now.toISOString(),
+      trial_end: trialEnd.toISOString(),
+      subscription_start: user.subscription_start || now.toISOString(),
+      trial_activated: true
+    };
+
+    setUser(updatedUser);
+    SubscriptionService.saveUser(updatedUser);
+    setIsStartTrialModalOpen(false);
+
+    showToast('🚀 7-Day Free PRO Trial Activated! All Pro Features Unlocked for 7 Days.');
+  };
+
+  const checkAndTriggerFirstTimeTour = (userData) => {
+    if (!userData || !userData.user_id) return;
+    const tourKeyUser = `smart_planner_tour_seen_${userData.user_id}`;
+    const tourKeyEmail = userData.email ? `smart_planner_tour_seen_${userData.email}` : null;
+
+    const hasSeenUser = localStorage.getItem(tourKeyUser) === 'true';
+    const hasSeenEmail = tourKeyEmail ? localStorage.getItem(tourKeyEmail) === 'true' : false;
+
+    if (!hasSeenUser && !hasSeenEmail) {
+      setTimeout(() => {
+        setIsTutorialOpen(true);
+      }, 500);
+      localStorage.setItem(tourKeyUser, 'true');
+      if (tourKeyEmail) localStorage.setItem(tourKeyEmail, 'true');
+    }
+  };
+
   const handleLoginSuccess = (userData, mode) => {
     const isOwner = userData?.role === 'owner' || userData?.isOwner || (userData?.email && (userData.email.toLowerCase().includes('owner') || userData.email.toLowerCase().includes('admin')));
     const finalUserData = isOwner ? { ...userData, current_plan: 'PRO', role: 'owner', isOwner: true } : userData;
@@ -130,10 +173,21 @@ export default function App() {
     setActivePlanId(activeId);
 
     setCurrentView('dashboard');
+
+    // Prompt user to activate/confirm 7-Day Free Trial if newly registered or hasn't confirmed trial yet
+    if (mode === 'register' || (!isOwner && finalUserData?.subscription_status === 'trial')) {
+      setTimeout(() => {
+        setIsStartTrialModalOpen(true);
+      }, 300);
+    }
+
     showToast(mode === 'register' 
       ? `✨ Account registered & logged in SMTP Database! Fresh workspace initialized.` 
       : `✨ Welcome back, ${userData.name}! Clean workspace ready.`
     );
+
+    // Automatically trigger interactive tour on first time login/registration
+    checkAndTriggerFirstTimeTour(finalUserData);
   };
 
   const handleLogout = () => {
@@ -157,6 +211,8 @@ export default function App() {
     const hasLoginHash = window.location.hash === '#login' || window.location.search.includes('auth=login');
     if (!loadedUser || hasLoginHash) {
       setCurrentView('login');
+    } else {
+      checkAndTriggerFirstTimeTour(loadedUser);
     }
   }, []);
 
@@ -361,7 +417,94 @@ export default function App() {
     showToast('Task deleted successfully from schedule.');
   };
 
-  const handleUpdateTaskTime = (dateKey, slotId, newStartTime, newEndTime) => {
+  const triggerNotificationAlert = (notifInput) => {
+    let payload;
+    if (typeof notifInput === 'string') {
+      payload = {
+        id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        title: 'Task Notification',
+        message: notifInput,
+        dueInfo: `${selectedDate}`,
+        source: 'Default Webpage Notification',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    } else {
+      payload = {
+        id: notifInput.id || `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        title: notifInput.title || 'Task Notification',
+        message: notifInput.message,
+        dueInfo: notifInput.dueInfo || `${selectedDate}`,
+        source: notifInput.source || 'Default Webpage Notification',
+        timestamp: notifInput.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    }
+
+    // 1. Show Toast Alert
+    showToast(`${payload.title}: ${payload.message}`);
+
+    // 2. Add to Notifications Drawer
+    setNotifications(prev => [payload, ...prev]);
+
+    // 3. Dispatch Native Browser Desktop Notification
+    if ("Notification" in window && Notification.permission === "granted") {
+      try {
+        new Notification(`📌 ${payload.title}`, {
+          body: `${payload.message}\n📅 Due: ${payload.dueInfo}`,
+          icon: `${import.meta.env.BASE_URL}logo.png`
+        });
+      } catch (e) {
+        console.warn('Native notification error:', e);
+      }
+    }
+  };
+
+  // Request Native Web Browser Notification Permission on App Load
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Default Webpage Background Automated Notification Engine
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!activePlan || !activePlan.scheduleMap) return;
+
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const ampm = currentHours >= 12 ? 'PM' : 'AM';
+      const formattedHours = (currentHours % 12 || 12).toString().padStart(2, '0');
+      const formattedMinutes = currentMinutes.toString().padStart(2, '0');
+      const currentTimeStr = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+      const todayStr = formatDateKey(now);
+      const dayData = activePlan.scheduleMap[todayStr];
+
+      if (dayData && dayData.slots) {
+        dayData.slots.forEach(slot => {
+          if (slot.completed) return;
+
+          const slotDueDate = slot.dueDate || todayStr;
+          const dueTimeStr = slot.startTime || '09:00 AM';
+
+          if (currentTimeStr === dueTimeStr && !slot.autoNotified) {
+            slot.autoNotified = true;
+            triggerNotificationAlert({
+              title: 'Default Webpage Notification',
+              message: `⏰ DEFAULT REMINDER: "${slot.title}" is due now!`,
+              dueInfo: `${slotDueDate} at ${dueTimeStr}`,
+              source: slot.customNotificationSet ? 'User Custom Alarm' : 'Default Webpage Notification'
+            });
+          }
+        });
+      }
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [activePlan]);
+
+  const handleUpdateTaskTime = (dateKey, slotId, newStartTime, newEndTime, newDueDate, reminderOffset) => {
     if (!activePlan || !activePlan.scheduleMap) return;
 
     const newScheduleMap = JSON.parse(JSON.stringify(activePlan.scheduleMap));
@@ -371,7 +514,10 @@ export default function App() {
       if (slot) {
         slot.startTime = newStartTime;
         slot.endTime = newEndTime;
+        slot.dueDate = newDueDate || dateKey;
+        slot.reminderOffset = reminderOffset || '0';
         slot.customNotificationSet = true;
+        slot.autoNotified = false;
       }
     }
 
@@ -488,6 +634,18 @@ export default function App() {
     showToast(`👑 Owner Action: User plan updated to ${newPlan}!`);
   };
 
+  const handleUpdateProfile = (updatedFields) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      ...updatedFields
+    };
+    setUser(updatedUser);
+    SubscriptionService.saveUser(updatedUser);
+    SmtpService.registerUserDatabase(updatedUser, 'update_profile');
+    showToast('✨ User profile details updated successfully!');
+  };
+
   // View Page Switcher Routing
   if (currentView === 'login' || !user) {
     return (
@@ -579,9 +737,9 @@ export default function App() {
       )}
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 md:pb-8 flex-1 w-full">
         
-        {/* Freemium Upgrade Banner */}
+        {/* Pro Upgrade Banner with 7-Day Free Trial */}
         <FreeUpgradeBanner
           user={user}
           onExplorePro={() => setCurrentView('unlock_page')}
@@ -613,8 +771,8 @@ export default function App() {
         />
 
         {/* Main View Navigation Tabs */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 mb-6">
-          <div className="flex items-center gap-2 sm:gap-6">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-max">
             <button
               onClick={() => setActiveTab('daily')}
               className={`pb-3 text-xs sm:text-sm font-black flex items-center gap-2 border-b-2 transition-all ${
@@ -673,16 +831,7 @@ export default function App() {
                 setActivePomodoroSlot(slot);
                 setIsPomodoroOpen(true);
               }}
-              onTriggerNotificationPop={(msg) => {
-                showToast(msg);
-                setNotifications(prev => [{
-                  id: `notif_${Date.now()}`,
-                  title: 'Task Alarm',
-                  message: msg,
-                  type: 'reminder',
-                  timestamp: new Date().toISOString()
-                }, ...prev]);
-              }}
+              onTriggerNotificationPop={triggerNotificationAlert}
             />
           </>
         )}
@@ -707,6 +856,69 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Mobile Bottom Navigation Dock (Phone View) */}
+      {currentView === 'dashboard' && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40 px-3 py-2 flex items-center justify-around shadow-2xl">
+          <button
+            onClick={() => setActiveTab('daily')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'daily'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <CheckSquare className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Tasks</span>
+          </button>
+
+          <button
+            onClick={() => gateFeature('calendar_view', () => setActiveTab('calendar'))}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'calendar'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <CalendarIcon className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Calendar</span>
+          </button>
+
+          {/* Floating Action Button for Quick Add */}
+          <button
+            onClick={() => setIsQuickAddOpen(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-lg transform -translate-y-3 border-2 border-white dark:border-slate-900 active:scale-95 transition-all"
+            title="Add Quick Task"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              activeTab === 'progress'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <BarChart2 className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Progress</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('pricing')}
+            className={`flex flex-col items-center justify-center transition-all ${
+              currentView === 'pricing'
+                ? 'text-purple-600 dark:text-purple-400 font-black scale-105'
+                : 'text-slate-500 dark:text-slate-400 font-bold'
+            }`}
+          >
+            <Zap className="w-5 h-5 text-amber-500 fill-amber-400" />
+            <span className="text-[10px] mt-0.5">Plans</span>
+          </button>
+        </nav>
+      )}
+
 
       {/* Plan Wizard Modal */}
       <PlanWizardModal
@@ -792,12 +1004,20 @@ export default function App() {
         onOpenPricing={() => setCurrentView('pricing')}
         onLogout={handleLogout}
         onUpdateUserPlan={handleOwnerUpdateUserPlan}
+        onUpdateProfile={handleUpdateProfile}
       />
 
       {/* Interactive App Feature Walkthrough Tutorial Modal */}
       <AppTutorialModal
         isOpen={isTutorialOpen}
         onClose={() => setIsTutorialOpen(false)}
+      />
+
+      {/* 7-Day Free Trial Activation Modal */}
+      <StartFreeTrialModal
+        isOpen={isStartTrialModalOpen}
+        onClose={() => setIsStartTrialModalOpen(false)}
+        onActivateTrial={handleActivateFreeTrial}
       />
 
       {/* Auth Login & Registration Modal */}

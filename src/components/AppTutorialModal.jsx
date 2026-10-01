@@ -15,7 +15,8 @@ import {
   Plus,
   Palette,
   Compass,
-  CheckSquare
+  CheckSquare,
+  User
 } from 'lucide-react';
 
 export default function AppTutorialModal({
@@ -41,7 +42,7 @@ export default function AppTutorialModal({
           <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-950 dark:text-purple-200 font-bold space-y-1">
             <p>✨ <strong>What makes JSPilot smart?</strong></p>
             <ul className="list-disc list-inside space-y-1 text-[11px]">
-              <li>0 pre-filled dummy subjects for new accounts</li>
+              <li>Clean, clutter-free setup ready for custom subjects</li>
               <li>7-Day Free Trial PRO access for all new users</li>
               <li>Custom Multi-Color Themes & Alarm Notifications</li>
             </ul>
@@ -58,7 +59,7 @@ export default function AppTutorialModal({
       content: (
         <div className="space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
           <p>
-            This dropdown shows your active plan (e.g. <strong>Target Exam Prep</strong> or <strong>General Habits</strong>). Click it at any time to switch active plans or view your plan list.
+            This dropdown shows your active plan (e.g. <strong>Target Exam Preparation</strong> or <strong>General Habits</strong>). Click it at any time to switch active plans or view your plan list.
           </p>
           <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-950 dark:text-indigo-200 font-bold">
             💡 You can manage multiple exam schedules and switch between them instantly.
@@ -139,7 +140,7 @@ export default function AppTutorialModal({
     {
       target: '[data-tour="exam-countdown"]',
       title: 'Exam Countdown & Phase Pipeline 🔥',
-      subtitle: 'Track Exam Days & Strategic Prep Phases',
+      subtitle: 'Track Exam Days & Strategic Preparation Phases',
       icon: Target,
       color: 'bg-amber-600 text-white',
       content: (
@@ -204,15 +205,15 @@ export default function AppTutorialModal({
       )
     },
     {
-      target: '[data-tour="profile-theme-btn"]',
-      title: 'Multi-Color Themes & User Profile 🎨',
-      subtitle: 'Personalize UI Themes & Account Settings',
-      icon: Palette,
-      color: 'bg-pink-600 text-white',
+      target: '[data-tour="profile-btn"], [data-tour="profile-theme-btn"]',
+      title: 'User Profile & Color Themes 👤🎨',
+      subtitle: 'Edit Profile, Goal & Customize Themes',
+      icon: User,
+      color: 'bg-gradient-to-r from-purple-600 to-pink-600 text-white',
       content: (
         <div className="space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
           <p>
-            Customize your JSPilot workspace theme with preset colors: <strong>Light, Dark, Cyberpunk, Ocean Blue, Emerald Green, and Rose Gold</strong>.
+            Click your <strong>User Profile Logo / Avatar</strong> in the top navbar to edit your name, email address, target goal/profession, or switch UI themes (Light, Dark, Cyberpunk, Ocean Blue, Emerald Green, Candy Pink, Amber, and Peach).
           </p>
         </div>
       )

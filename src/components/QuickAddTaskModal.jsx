@@ -79,7 +79,7 @@ export default function QuickAddTaskModal({
                 className="form-control"
               >
                 <option value="Studies">Studies</option>
-                <option value="Exam Prep">Exam Prep</option>
+                <option value="Exam Preparation">Exam Preparation</option>
                 <option value="Project">Project</option>
                 <option value="Work">Work</option>
                 <option value="Personal">Personal</option>

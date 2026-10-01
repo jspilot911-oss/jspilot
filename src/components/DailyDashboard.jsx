@@ -33,109 +33,34 @@ export default function DailyDashboard({
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [activeTooltipId, setActiveTooltipId] = useState(null);
   
-  // Custom Time Editor Modal State
+  // Custom Time & Notification Editor Modal State
   const [editingSlot, setEditingSlot] = useState(null);
   const [customStartTime, setCustomStartTime] = useState('09:00 AM');
   const [customEndTime, setCustomEndTime] = useState('10:30 AM');
-
-  // Automated background timer to check for current task time alerts
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!plan || !plan.scheduleMap) return;
-      const todayKey = selectedDate;
-      const dayData = plan.scheduleMap[todayKey];
-      if (dayData && dayData.slots) {
-        const now = new Date();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const ampm = currentHours >= 12 ? 'PM' : 'AM';
-        const formattedHours = (currentHours % 12 || 12).toString().padStart(2, '0');
-        const formattedMinutes = currentMinutes.toString().padStart(2, '0');
-        const currentTimeStr = `${formattedHours}:${formattedMinutes} ${ampm}`;
-
-        dayData.slots.forEach(slot => {
-          if (slot.startTime === currentTimeStr && !slot.notified) {
-            slot.notified = true;
-            if (onTriggerNotificationPop) {
-              onTriggerNotificationPop(`⏰ TASK ALARM: Time to start "${slot.title}"! (${slot.startTime})`);
-            }
-          }
-        });
-      }
-    }, 20000);
-
-    return () => clearInterval(interval);
-  }, [plan, selectedDate, onTriggerNotificationPop]);
-
-  if (!plan || !plan.scheduleMap) {
-    return (
-      <div className="card p-8 sm:p-12 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-3xl space-y-4 my-4 animate-fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-300 flex items-center justify-center mx-auto shadow-md">
-          <Sparkles className="w-8 h-8" />
-        </div>
-        <div className="space-y-1.5 max-w-md mx-auto">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            Fresh Workspace Started!
-          </h2>
-          <p className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">
-            You are signed in with a clean slate. There are no previous tasks or plans in your database yet.
-          </p>
-        </div>
-        <button
-          onClick={onOpenWizard}
-          className="btn btn-primary text-xs sm:text-sm font-black py-3 px-6 shadow-lg shadow-purple-500/25 bg-gradient-to-r from-purple-600 to-indigo-600 inline-flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Your First Smart Plan</span>
-        </button>
-      </div>
-    );
-  }
-
-  const dayData = plan.scheduleMap[selectedDate] || {
-    date: selectedDate,
-    dayName: 'Today',
-    availableHours: plan.availableHoursPerDay || 4,
-    slots: []
-  };
-
-  const slots = dayData.slots || [];
-
-  const filteredSlots = slots.filter(slot => {
-    if (priorityFilter === 'all') return true;
-    return slot.priority && slot.priority.level === priorityFilter;
-  });
-
-  const completedSlotsCount = slots.filter(s => s.completed).length;
-  const totalSlotsCount = slots.length;
-  const todayProgressPercent = totalSlotsCount > 0 
-    ? Math.round((completedSlotsCount / totalSlotsCount) * 100) 
-    : 0;
-
-  const handleCheckboxClick = (slotId, currentCompletedState) => {
-    const nextState = !currentCompletedState;
-    onToggleTaskCompleted(selectedDate, slotId);
-
-    if (nextState && completedSlotsCount + 1 === totalSlotsCount) {
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-    }
-  };
+  const [customDueDate, setCustomDueDate] = useState(selectedDate);
+  const [reminderOffset, setReminderOffset] = useState('0');
 
   const handleOpenTimeEditor = (slot) => {
     setEditingSlot(slot);
     setCustomStartTime(slot.startTime || '09:00 AM');
     setCustomEndTime(slot.endTime || '10:30 AM');
+    setCustomDueDate(slot.dueDate || selectedDate);
+    setReminderOffset(slot.reminderOffset || '0');
   };
 
   const handleSaveCustomTime = () => {
     if (editingSlot && onUpdateTaskTime) {
-      onUpdateTaskTime(selectedDate, editingSlot.id, customStartTime, customEndTime);
+      onUpdateTaskTime(selectedDate, editingSlot.id, customStartTime, customEndTime, customDueDate, reminderOffset);
       if (onTriggerNotificationPop) {
-        onTriggerNotificationPop(`⏰ Notification Set! Task "${editingSlot.title}" scheduled for ${customStartTime}.`);
+        const offsetLabel = reminderOffset === '0' ? 'at due time' : `${reminderOffset} mins before due time`;
+        onTriggerNotificationPop({
+          id: `notif_${Date.now()}`,
+          title: 'Custom Notification Configured',
+          message: `⏰ REMINDER SET: "${editingSlot.title}" is due on ${customDueDate} at ${customStartTime} (alert ${offsetLabel}).`,
+          dueInfo: `${customDueDate} at ${customStartTime}`,
+          source: 'User Custom Alarm',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
       }
     }
     setEditingSlot(null);
@@ -143,7 +68,15 @@ export default function DailyDashboard({
 
   const handleTestNotification = (slot) => {
     if (onTriggerNotificationPop) {
-      onTriggerNotificationPop(`🔔 TASK NOTIFICATION: Time for "${slot.title}"! (${slot.startTime} – ${slot.endTime})`);
+      const dueDateStr = slot.dueDate || selectedDate;
+      onTriggerNotificationPop({
+        id: `notif_${Date.now()}`,
+        title: 'Task Alarm',
+        message: `🔔 TASK ALARM: "${slot.title}" is due on ${dueDateStr} at ${slot.startTime}!`,
+        dueInfo: `${dueDateStr} at ${slot.startTime}`,
+        source: 'Instant Task Alert',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
     }
   };
 
@@ -488,6 +421,33 @@ export default function DailyDashboard({
                   placeholder="e.g. 10:30 AM"
                   className="form-control text-xs"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="form-group mb-0">
+                <label className="form-label text-xs">Due Date</label>
+                <input
+                  type="date"
+                  value={customDueDate}
+                  onChange={(e) => setCustomDueDate(e.target.value)}
+                  className="form-control text-xs"
+                />
+              </div>
+
+              <div className="form-group mb-0">
+                <label className="form-label text-xs">Notification Reminder</label>
+                <select
+                  value={reminderOffset}
+                  onChange={(e) => setReminderOffset(e.target.value)}
+                  className="form-control text-xs"
+                >
+                  <option value="0">🔔 At due time</option>
+                  <option value="5">🔔 5 mins before due time</option>
+                  <option value="15">🔔 15 mins before due time</option>
+                  <option value="30">🔔 30 mins before due time</option>
+                  <option value="60">🔔 1 hour before due time</option>
+                </select>
               </div>
             </div>
 

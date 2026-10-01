@@ -6,14 +6,18 @@ const STORAGE_KEY_SUBSCRIPTIONS = 'smart_planner_subscriptions_v1';
 /**
  * Initial Default User Model
  */
+const defaultTrialEnd = new Date();
+defaultTrialEnd.setDate(defaultTrialEnd.getDate() + 7);
+
 const DEFAULT_USER = {
   user_id: 'usr_demo_101',
   name: 'Demo Student',
   email: 'student@example.com',
-  current_plan: PLAN_IDS.FREE, // 'FREE' | 'PRO' | 'YEARLY'
-  subscription_status: 'active', // 'active' | 'expired' | 'canceled'
+  current_plan: PLAN_IDS.PRO, // Default 7-Day Free Trial PRO Access
+  subscription_status: 'trial', // 'active' | 'trial' | 'expired' | 'canceled'
   subscription_start: new Date().toISOString(),
-  subscription_end: null,
+  trial_start: new Date().toISOString(),
+  trial_end: defaultTrialEnd.toISOString(),
   billing_cycle: 'none'
 };
 
@@ -24,7 +28,29 @@ export const SubscriptionService = {
   getUser() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_USER);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        let u = JSON.parse(stored);
+        if (u) {
+          const now = new Date();
+          const trialEndDate = u.trial_end ? new Date(u.trial_end) : null;
+          const isPaidOrOwner = u.subscription_status === 'active' || u.role === 'owner' || u.isOwner || (u.email && (u.email.toLowerCase().includes('owner') || u.email.toLowerCase().includes('admin')));
+
+          if (isPaidOrOwner) {
+            u.current_plan = u.current_plan || PLAN_IDS.PRO;
+            u.subscription_status = 'active';
+          } else if (trialEndDate && now > trialEndDate) {
+            // 7-Day trial expired for free user! Revert to FREE plan unless subscribed
+            u.current_plan = PLAN_IDS.FREE;
+            u.subscription_status = 'expired';
+            this.saveUser(u);
+          } else {
+            // Still within 7-Day Free Trial
+            u.current_plan = PLAN_IDS.PRO;
+            u.subscription_status = 'trial';
+          }
+          return u;
+        }
+      }
     } catch (e) {
       console.error('Failed to load user profile:', e);
     }
@@ -45,6 +71,27 @@ export const SubscriptionService = {
     } catch (e) {
       console.error('Failed to logout user profile:', e);
     }
+  },
+
+  /**
+   * Helper to check if user has active subscription or valid 7-day trial
+   */
+  hasProAccess(user) {
+    if (!user) return false;
+
+    const isOwner = user.role === 'owner' || user.isOwner || (user.email && (user.email.toLowerCase().includes('owner') || user.email.toLowerCase().includes('admin')));
+    if (isOwner) return true;
+
+    if (user.subscription_status === 'active' && user.current_plan !== PLAN_IDS.FREE) {
+      return true;
+    }
+
+    if (user.subscription_status === 'trial') {
+      if (!user.trial_end) return true;
+      return new Date() <= new Date(user.trial_end);
+    }
+
+    return false;
   },
 
   /**
@@ -74,13 +121,16 @@ export const SubscriptionService = {
   canUseFeature(featureKey) {
     const user = this.getUser();
     const planPlanId = user?.current_plan || PLAN_IDS.FREE;
-    const planConfig = SUBSCRIPTION_PLANS[planPlanId] || SUBSCRIPTION_PLANS.FREE;
 
-    // Check if subscription is active
-    if (planPlanId !== PLAN_IDS.FREE && user?.subscription_status !== 'active') {
-      return { allowed: false, reason: 'Subscription is expired or canceled' };
+    // Check if subscription or 7-day free trial is valid
+    if (planPlanId !== PLAN_IDS.FREE) {
+      const isProValid = this.hasProAccess(user);
+      if (!isProValid) {
+        return { allowed: false, reason: '7-Day Free Trial or Pro subscription has expired' };
+      }
     }
 
+    const planConfig = SUBSCRIPTION_PLANS[planPlanId] || SUBSCRIPTION_PLANS.FREE;
     const isAllowed = Boolean(planConfig.limits[featureKey]);
     return {
       allowed: isAllowed,
@@ -93,7 +143,8 @@ export const SubscriptionService = {
    */
   canCreatePlan(currentPlansCount = 0) {
     const user = this.getUser();
-    const planPlanId = user?.current_plan || PLAN_IDS.FREE;
+    const isProValid = this.hasProAccess(user);
+    const planPlanId = isProValid ? (user?.current_plan || PLAN_IDS.PRO) : PLAN_IDS.FREE;
     const planConfig = SUBSCRIPTION_PLANS[planPlanId] || SUBSCRIPTION_PLANS.FREE;
     const limit = planConfig.limits.active_plans;
 

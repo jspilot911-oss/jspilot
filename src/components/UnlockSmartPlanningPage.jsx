@@ -69,9 +69,9 @@ export default function UnlockSmartPlanningPage({
 
       {/* Hero Header */}
       <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200">
           <Sparkles className="w-4 h-4 text-purple-600" />
-          <span>Freemium Smart Engine</span>
+          <span>Pro Engine &bull; 7-Day Free Trial Included</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
