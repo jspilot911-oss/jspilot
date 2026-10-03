@@ -18,10 +18,12 @@ import logoImg from '../assets/logo.png';
 export default function PricingPage({
   user,
   onSelectPlanToBuy,
+  onActivateTrial,
   onBackToDashboard
 }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
-  const isFreeUser = !user?.current_plan || user?.current_plan === PLAN_IDS.FREE;
+  const isFreeUser = !user?.current_plan || user?.current_plan === PLAN_IDS.FREE || user?.subscription_status === 'free';
+  const isTrialActive = user?.subscription_status === 'trial' && (!user?.trial_end || new Date() <= new Date(user?.trial_end));
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900 animate-fade-in">
@@ -203,9 +205,9 @@ export default function PricingPage({
 
           <button
             onClick={() => onSelectPlanToBuy(PLAN_IDS.PRO)}
-            className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="w-full btn btn-primary text-xs font-extrabold py-3.5 shadow-lg shadow-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {user?.current_plan === PLAN_IDS.PRO ? 'Current Active Plan' : 'Start 7-Day Free Trial'}
+            <span>💳 Pay ₹49 & Subscribe to PRO</span>
           </button>
         </div>
 

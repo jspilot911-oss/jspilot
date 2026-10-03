@@ -63,6 +63,36 @@ export const SubscriptionService = {
     return null;
   },
 
+  activateFreeTrial(user) {
+    if (!user) return null;
+    const now = new Date();
+    const trialEnd = new Date();
+    trialEnd.setDate(now.getDate() + 7);
+
+    const updatedUser = {
+      ...user,
+      current_plan: PLAN_IDS.PRO,
+      subscription_status: 'trial',
+      trial_start: now.toISOString(),
+      trial_end: trialEnd.toISOString(),
+      trial_activated: true
+    };
+    this.saveUser(updatedUser);
+    return updatedUser;
+  },
+
+  declineTrial(user) {
+    if (!user) return null;
+    const updatedUser = {
+      ...user,
+      current_plan: PLAN_IDS.FREE,
+      subscription_status: 'free',
+      trial_activated: false
+    };
+    this.saveUser(updatedUser);
+    return updatedUser;
+  },
+
   saveUser(user) {
     try {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
