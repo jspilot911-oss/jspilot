@@ -369,7 +369,7 @@ export default function LoginPage({
                   </div>
                 )}
 
-                {['CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC', 'Other'].includes(examCategory) && (
+                {['CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC'].includes(examCategory) && (
                   <div className="form-group mb-0">
                     <label className="form-label text-xs text-slate-700 dark:text-slate-300">
                       <span>Exam Level / Stage</span>
