@@ -38,41 +38,6 @@ export default function TaskPomodoroModal({
 
   const timerRef = useRef(null);
 
-  // Initialize or reset timer when slot changes
-  useEffect(() => {
-    if (slot) {
-      let mins = 25;
-      if (mode === 'short_break') mins = 5;
-      if (mode === 'long_break') mins = 15;
-      setDurationMinutes(mins);
-      setTimeLeft(mins * 60);
-      setIsRunning(false);
-      setIsMinimized(false);
-    }
-  }, [slot?.id]);
-
-  // Main background countdown timer loop
-  useEffect(() => {
-    if (isRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            handleTimerComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-
-    return () => clearInterval(timerRef.current);
-  }, [isRunning, mode]);
-
-  if (!slot) return null;
-
   const handleTimerComplete = () => {
     setIsRunning(false);
 
@@ -106,7 +71,7 @@ export default function TaskPomodoroModal({
       });
 
       if (onTriggerNotificationPop) {
-        onTriggerNotificationPop(`🍅 POMODORO FINISHED! Great focus on "${slot.title}". Take a break!`);
+        onTriggerNotificationPop(`🍅 POMODORO FINISHED! Great focus on "${slot?.title || 'Task'}". Take a break!`);
       }
 
       // Automatically offer break
@@ -121,13 +86,46 @@ export default function TaskPomodoroModal({
       }
     } else {
       if (onTriggerNotificationPop) {
-        onTriggerNotificationPop(`☕ Break finished! Ready to resume focus on "${slot.title}"?`);
+        onTriggerNotificationPop(`☕ Break finished! Ready to resume focus on "${slot?.title || 'Task'}"?`);
       }
       setMode('focus');
       setDurationMinutes(25);
       setTimeLeft(25 * 60);
     }
   };
+
+  // Initialize or reset timer when slot changes
+  useEffect(() => {
+    if (slot) {
+      let mins = 25;
+      if (mode === 'short_break') mins = 5;
+      if (mode === 'long_break') mins = 15;
+      setDurationMinutes(mins);
+      setTimeLeft(mins * 60);
+      setIsRunning(false);
+      setIsMinimized(false);
+    }
+  }, [slot?.id]);
+
+  // Main background countdown timer loop
+  useEffect(() => {
+    if (isRunning) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            handleTimerComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
+
+    return () => clearInterval(timerRef.current);
+  }, [isRunning, mode]);
 
   const toggleStartPause = (e) => {
     if (e) e.stopPropagation();
