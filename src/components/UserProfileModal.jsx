@@ -127,16 +127,7 @@ export default function UserProfileModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="btn bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800 text-xs font-black py-1.5 px-3 flex items-center gap-1.5"
-                title="Edit User Profile"
-              >
-                <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Edit Profile</span>
-              </button>
-            ) : (
+            {isEditing && (
               <button
                 onClick={() => setIsEditing(false)}
                 className="btn btn-secondary text-xs font-bold py-1.5 px-3"

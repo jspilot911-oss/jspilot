@@ -38,15 +38,21 @@ export const SubscriptionService = {
           if (isPaidOrOwner) {
             u.current_plan = u.current_plan || PLAN_IDS.PRO;
             u.subscription_status = 'active';
-          } else if (trialEndDate && now > trialEndDate) {
-            // 7-Day trial expired for free user! Revert to FREE plan unless subscribed
-            u.current_plan = PLAN_IDS.FREE;
-            u.subscription_status = 'expired';
-            this.saveUser(u);
+          } else if (u.subscription_status === 'trial' || u.trial_activated) {
+            if (trialEndDate && now > trialEndDate) {
+              // 7-Day trial expired! Revert to FREE plan unless subscribed
+              u.current_plan = PLAN_IDS.FREE;
+              u.subscription_status = 'expired';
+              this.saveUser(u);
+            } else {
+              // Still within active 7-Day Free Trial
+              u.current_plan = PLAN_IDS.PRO;
+              u.subscription_status = 'trial';
+            }
           } else {
-            // Still within 7-Day Free Trial
-            u.current_plan = PLAN_IDS.PRO;
-            u.subscription_status = 'trial';
+            // Free plan user (trial not activated yet)
+            u.current_plan = u.current_plan || PLAN_IDS.FREE;
+            u.subscription_status = u.subscription_status || 'free';
           }
           return u;
         }

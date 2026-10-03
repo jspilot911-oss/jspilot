@@ -95,15 +95,15 @@ export default function LoginPage({
       : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
 
     const userData = {
-      user_id: existingUser?.user_id || `usr_${Date.now()}`,
+      user_id: existingUser?.user_id || SmtpService.generateNextUserId(existingUsers),
       name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
       email: formattedEmail,
       targetGoal: resolvedGoal,
-      current_plan: existingUser?.current_plan || 'PRO',
-      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'trial'),
+      current_plan: isOwner ? 'PRO' : (existingUser?.current_plan || 'FREE'),
+      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'free'),
       subscription_start: existingUser?.subscription_start || new Date().toISOString(),
-      trial_start: existingUser?.trial_start || new Date().toISOString(),
-      trial_end: existingUser?.trial_end || trialEnd.toISOString(),
+      trial_start: existingUser?.trial_start || null,
+      trial_end: existingUser?.trial_end || null,
       role: isOwner ? 'owner' : (existingUser?.role || 'user'),
       isOwner
     };
@@ -120,7 +120,7 @@ export default function LoginPage({
     const existingUser = existingUsers.find(u => u.email && u.email.toLowerCase() === demoEmail.trim().toLowerCase());
 
     const userData = {
-      user_id: existingUser?.user_id || `usr_demo_${Date.now()}`,
+      user_id: existingUser?.user_id || SmtpService.generateNextUserId(existingUsers),
       name: demoName,
       email: demoEmail,
       targetGoal: existingUser?.targetGoal || existingUser?.target_goal || 'General Tasks & Habits',
@@ -369,7 +369,7 @@ export default function LoginPage({
                   </div>
                 )}
 
-                {['Business & Profession', 'CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC', 'Other'].includes(examCategory) && (
+                {['CA', 'CMA', 'CS', 'JEE', 'NEET', 'SSC', 'University Studies', 'UPSC'].includes(examCategory) && (
                   <div className="form-group mb-0">
                     <label className="form-label text-xs text-slate-700 dark:text-slate-300">
                       <span>Exam Level / Stage</span>

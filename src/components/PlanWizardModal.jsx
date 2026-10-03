@@ -289,19 +289,6 @@ export default function PlanWizardModal({
                     </div>
                   )}
                 </div>
-
-                {examCategory === 'Other' && (
-                  <div className="form-group mb-0">
-                    <label className="form-label text-slate-800 dark:text-slate-200">Exam Level / Stage</label>
-                    <input
-                      type="text"
-                      value={examLevel}
-                      onChange={(e) => setExamLevel(e.target.value)}
-                      placeholder="e.g. Intermediate, Final, Prelims, Mains, Tier 1, 12th"
-                      className="form-control"
-                    />
-                  </div>
-                )}
               </div>
             ) : (
               <div className="form-group">
