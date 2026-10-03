@@ -4,7 +4,8 @@ import { PLAN_IDS } from '../config/subscriptionPlans.js';
 
 export default function FreeUpgradeBanner({
   user,
-  onExplorePro
+  onExplorePro,
+  onActivateTrial
 }) {
   const isOwner = user?.role === 'owner' || user?.isOwner || (user?.email && (user.email.toLowerCase().includes('owner') || user.email.toLowerCase().includes('admin')));
   const isSubscribed = user?.subscription_status === 'active' || isOwner;
@@ -13,7 +14,7 @@ export default function FreeUpgradeBanner({
   const regDate = user?.subscription_start || user?.trial_start ? new Date(user.subscription_start || user.trial_start) : new Date();
   const trialEnd = user?.trial_end ? new Date(user.trial_end) : new Date(regDate.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const isTrialActive = !isSubscribed && user?.subscription_status === 'trial' && now <= trialEnd;
+  const isTrialActive = !isSubscribed && (user?.subscription_status === 'trial' || user?.trial_activated) && now <= trialEnd;
   const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
   const formattedRegDate = regDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -108,7 +109,13 @@ export default function FreeUpgradeBanner({
         </div>
 
         <button
-          onClick={onExplorePro}
+          onClick={() => {
+            if (onActivateTrial) {
+              onActivateTrial();
+            } else {
+              onExplorePro();
+            }
+          }}
           className="btn bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-black py-2.5 px-4 rounded-xl shadow-md shrink-0 self-end sm:self-center flex items-center gap-1.5"
         >
           <span>🚀 Start 7-Day Free Trial</span>

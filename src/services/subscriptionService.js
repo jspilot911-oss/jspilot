@@ -48,6 +48,13 @@ export const SubscriptionService = {
               // Still within active 7-Day Free Trial
               u.current_plan = PLAN_IDS.PRO;
               u.subscription_status = 'trial';
+              if (!u.trial_end) {
+                const defaultEnd = new Date();
+                defaultEnd.setDate(defaultEnd.getDate() + 7);
+                u.trial_end = defaultEnd.toISOString();
+                u.trial_start = u.trial_start || now.toISOString();
+                this.saveUser(u);
+              }
             }
           } else {
             // Free plan user (trial not activated yet)
@@ -92,7 +99,7 @@ export const SubscriptionService = {
       return true;
     }
 
-    if (user.subscription_status === 'trial') {
+    if (user.subscription_status === 'trial' || user.trial_activated) {
       if (!user.trial_end) return true;
       return new Date() <= new Date(user.trial_end);
     }
@@ -126,17 +133,16 @@ export const SubscriptionService = {
    */
   canUseFeature(featureKey) {
     const user = this.getUser();
-    const planPlanId = user?.current_plan || PLAN_IDS.FREE;
+    const isProValid = this.hasProAccess(user);
+    const effectivePlanId = isProValid ? PLAN_IDS.PRO : (user?.current_plan || PLAN_IDS.FREE);
 
-    // Check if subscription or 7-day free trial is valid
-    if (planPlanId !== PLAN_IDS.FREE) {
-      const isProValid = this.hasProAccess(user);
+    if (effectivePlanId !== PLAN_IDS.FREE) {
       if (!isProValid) {
         return { allowed: false, reason: '7-Day Free Trial or Pro subscription has expired' };
       }
     }
 
-    const planConfig = SUBSCRIPTION_PLANS[planPlanId] || SUBSCRIPTION_PLANS.FREE;
+    const planConfig = SUBSCRIPTION_PLANS[effectivePlanId] || SUBSCRIPTION_PLANS.FREE;
     const isAllowed = Boolean(planConfig.limits[featureKey]);
     return {
       allowed: isAllowed,
@@ -150,8 +156,8 @@ export const SubscriptionService = {
   canCreatePlan(currentPlansCount = 0) {
     const user = this.getUser();
     const isProValid = this.hasProAccess(user);
-    const planPlanId = isProValid ? (user?.current_plan || PLAN_IDS.PRO) : PLAN_IDS.FREE;
-    const planConfig = SUBSCRIPTION_PLANS[planPlanId] || SUBSCRIPTION_PLANS.FREE;
+    const effectivePlanId = isProValid ? PLAN_IDS.PRO : (user?.current_plan || PLAN_IDS.FREE);
+    const planConfig = SUBSCRIPTION_PLANS[effectivePlanId] || SUBSCRIPTION_PLANS.FREE;
     const limit = planConfig.limits.active_plans;
 
     if (currentPlansCount >= limit) {

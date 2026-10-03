@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Check, 
-  X, 
-  Sparkles, 
-  ShieldCheck, 
-  Zap, 
-  Award, 
-  ArrowLeft, 
+import {
+  Check,
+  X,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  Award,
+  ArrowLeft,
   HelpCircle,
   Flame,
   CheckCircle2
@@ -18,14 +18,16 @@ import logoImg from '../assets/logo.png';
 export default function PricingPage({
   user,
   onSelectPlanToBuy,
+  onActivateTrial,
   onBackToDashboard
 }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
-  const isFreeUser = !user?.current_plan || user?.current_plan === PLAN_IDS.FREE;
+  const isFreeUser = !user?.current_plan || user?.current_plan === PLAN_IDS.FREE || user?.subscription_status === 'free';
+  const isTrialActive = user?.subscription_status === 'trial' && (!user?.trial_end || new Date() <= new Date(user.trial_end));
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans text-slate-900 animate-fade-in">
-      
+
       {/* Top Header & Navigation */}
       <div className="max-w-7xl mx-auto mb-10 flex items-center justify-between">
         <button
@@ -70,13 +72,11 @@ export default function PricingPage({
 
           <button
             onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-            className={`w-14 h-8 rounded-full p-1 transition-colors relative ${
-              billingCycle === 'yearly' ? 'bg-purple-600' : 'bg-slate-300'
-            }`}
+            className={`w-14 h-8 rounded-full p-1 transition-colors relative ${billingCycle === 'yearly' ? 'bg-purple-600' : 'bg-slate-300'
+              }`}
           >
-            <div className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform transform ${
-              billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'
-            }`} />
+            <div className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform transform ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'
+              }`} />
           </button>
 
           <span className={`text-xs font-bold flex items-center gap-1.5 ${billingCycle === 'yearly' ? 'text-purple-700' : 'text-slate-400'}`}>
@@ -90,7 +90,7 @@ export default function PricingPage({
 
       {/* 3 Pricing Cards Grid */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch mb-16">
-        
+
         {/* FREE Card */}
         <div className="card p-6 bg-white border border-slate-200 shadow-sm rounded-3xl flex flex-col justify-between relative">
           <div>
@@ -135,15 +135,15 @@ export default function PricingPage({
           <button
             onClick={() => onSelectPlanToBuy(PLAN_IDS.FREE)}
             className="w-full btn btn-secondary text-xs font-bold py-3"
-            disabled={user?.current_plan === PLAN_IDS.FREE}
+            disabled={user?.current_plan === PLAN_IDS.FREE && !isTrialActive}
           >
-            {user?.current_plan === PLAN_IDS.FREE ? 'Current Plan' : 'Start Free'}
+            {user?.current_plan === PLAN_IDS.FREE && !isTrialActive ? 'Current Plan' : 'Basic Free Plan'}
           </button>
         </div>
 
         {/* PRO Card (MOST POPULAR) */}
         <div className="card p-6 bg-white border-2 border-purple-500 shadow-xl rounded-3xl flex flex-col justify-between relative transform md:-translate-y-2">
-          
+
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-purple-600 text-white text-[11px] font-extrabold tracking-wider shadow-md">
             MOST POPULAR
           </div>
@@ -151,29 +151,23 @@ export default function PricingPage({
           <div>
             <div className="flex items-center justify-between mt-2">
               <h3 className="text-lg font-extrabold text-purple-900">PRO</h3>
-              {isFreeUser && (
-                <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-200">
-                  🎁 7-Day Free Trial
-                </span>
-              )}
+              <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-purple-200">
+                {isTrialActive ? '🎉 Trial Active' : '🎁 7-Day Free Trial'}
+              </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">{SUBSCRIPTION_PLANS.PRO.description}</p>
 
             <div className="my-6">
               <span className="text-4xl font-extrabold text-slate-900">₹49</span>
               <span className="text-xs text-slate-500 font-medium ml-1">/ month</span>
-              {isFreeUser && (
-                <p className="text-[11px] font-extrabold text-purple-600 mt-1">7 Days Free Trial, then ₹49/month</p>
-              )}
+              <p className="text-[11px] font-extrabold text-purple-600 mt-1">7 Days Free Trial, then ₹49/month</p>
             </div>
 
             <ul className="space-y-2.5 text-xs text-slate-700 mb-6">
-              {isFreeUser && (
-                <li className="flex items-center gap-2 font-bold text-purple-900 bg-purple-50 p-2 rounded-xl border border-purple-200">
-                  <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>7-Day Free Trial for all new users</span>
-                </li>
-              )}
+              <li className="flex items-center gap-2 font-bold text-purple-900 bg-purple-50 p-2 rounded-xl border border-purple-200">
+                <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                <span>7-Day Free Trial for all new users</span>
+              </li>
               <li className="flex items-center gap-2 font-bold text-purple-900">
                 <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
                 <span>Everything in FREE +</span>
@@ -203,15 +197,15 @@ export default function PricingPage({
 
           <button
             onClick={() => onSelectPlanToBuy(PLAN_IDS.PRO)}
-            className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="w-full btn btn-primary text-xs font-extrabold py-3.5 shadow-lg shadow-purple-500/30 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {user?.current_plan === PLAN_IDS.PRO ? 'Current Active Plan' : 'Start 7-Day Free Trial'}
+            <span>💳 Pay ₹49 & Subscribe to PRO</span>
           </button>
         </div>
 
         {/* YEARLY Card (BEST VALUE) */}
         <div className="card p-6 bg-gradient-to-b from-purple-50 to-white border border-purple-200 shadow-lg rounded-3xl flex flex-col justify-between relative">
-          
+
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[11px] font-extrabold tracking-wider shadow-md">
             BEST VALUE
           </div>
@@ -250,9 +244,9 @@ export default function PricingPage({
 
           <button
             onClick={() => onSelectPlanToBuy(PLAN_IDS.YEARLY)}
-            className="w-full btn bg-gradient-to-r from-purple-700 via-indigo-600 to-pink-600 text-white text-xs font-extrabold py-3 shadow-lg hover:shadow-pink-500/25"
+            className="w-full btn bg-gradient-to-r from-purple-700 via-indigo-600 to-pink-600 text-white text-xs font-extrabold py-3.5 shadow-lg hover:shadow-pink-500/25 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {user?.current_plan === PLAN_IDS.YEARLY ? 'Current Active Plan' : 'Get Yearly'}
+            <span>💳 Pay ₹499 & Get Yearly</span>
           </button>
         </div>
 
@@ -279,7 +273,7 @@ export default function PricingPage({
               {COMPARISON_FEATURES.map((feat) => (
                 <tr key={feat.key} className="hover:bg-slate-50/50">
                   <td className="py-3 px-4 font-semibold text-slate-800">{feat.label}</td>
-                  
+
                   <td className="py-3 px-4 text-center text-slate-600">
                     {typeof feat.free === 'boolean' ? (
                       feat.free ? <Check className="w-4 h-4 text-emerald-500 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />

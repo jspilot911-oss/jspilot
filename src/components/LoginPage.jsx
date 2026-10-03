@@ -94,16 +94,20 @@ export default function LoginPage({
       ? (fullGoal.trim() || 'General Tasks & Habits')
       : (existingUser?.targetGoal || existingUser?.target_goal || (fullGoal.trim() ? fullGoal.trim() : 'General Tasks & Habits'));
 
+    const nowIso = new Date().toISOString();
+    const isNewTrialUser = mode === 'register' || (!isOwner && (!existingUser || (!existingUser.trial_activated && existingUser.subscription_status !== 'active' && existingUser.subscription_status !== 'expired')));
+
     const userData = {
       user_id: existingUser?.user_id || SmtpService.generateNextUserId(existingUsers),
       name: mode === 'register' ? name.trim() : (existingUser?.name || formattedEmail.split('@')[0] || 'User'),
       email: formattedEmail,
       targetGoal: resolvedGoal,
-      current_plan: isOwner ? 'PRO' : (existingUser?.current_plan || 'FREE'),
-      subscription_status: isOwner ? 'active' : (existingUser?.subscription_status || 'free'),
-      subscription_start: existingUser?.subscription_start || new Date().toISOString(),
-      trial_start: existingUser?.trial_start || null,
-      trial_end: existingUser?.trial_end || null,
+      current_plan: isOwner ? 'PRO' : (isNewTrialUser ? 'PRO' : (existingUser?.current_plan || 'PRO')),
+      subscription_status: isOwner ? 'active' : (isNewTrialUser ? 'trial' : (existingUser?.subscription_status || 'trial')),
+      subscription_start: existingUser?.subscription_start || nowIso,
+      trial_start: existingUser?.trial_start || (isNewTrialUser ? nowIso : null),
+      trial_end: existingUser?.trial_end || (isNewTrialUser ? trialEnd.toISOString() : null),
+      trial_activated: isNewTrialUser ? true : Boolean(existingUser?.trial_activated),
       role: isOwner ? 'owner' : (existingUser?.role || 'user'),
       isOwner
     };

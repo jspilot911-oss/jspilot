@@ -663,7 +663,18 @@ export default function App() {
         <PricingPage
           user={user}
           onSelectPlanToBuy={handleSelectPlanToBuy}
+          onActivateTrial={() => {
+            handleActivateFreeTrial();
+            setCurrentView('dashboard');
+          }}
           onBackToDashboard={() => setCurrentView('dashboard')}
+        />
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          selectedPlanId={selectedPlanToBuy}
+          onClose={() => setIsCheckoutOpen(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentFailed={handlePaymentFailed}
         />
       </div>
     );
@@ -675,6 +686,13 @@ export default function App() {
         <UnlockSmartPlanningPage
           onGoToPricing={() => setCurrentView('pricing')}
           onBackToDashboard={() => setCurrentView('dashboard')}
+        />
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          selectedPlanId={selectedPlanToBuy}
+          onClose={() => setIsCheckoutOpen(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentFailed={handlePaymentFailed}
         />
       </div>
     );
@@ -698,6 +716,13 @@ export default function App() {
           errorReason={paymentFailedReason}
           onRetryPayment={() => handleSelectPlanToBuy('PRO')}
           onReturnToDashboard={() => setCurrentView('dashboard')}
+        />
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          selectedPlanId={selectedPlanToBuy}
+          onClose={() => setIsCheckoutOpen(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentFailed={handlePaymentFailed}
         />
       </div>
     );
@@ -743,6 +768,7 @@ export default function App() {
         <FreeUpgradeBanner
           user={user}
           onExplorePro={() => setCurrentView('unlock_page')}
+          onActivateTrial={handleActivateFreeTrial}
         />
 
         {/* Controls Toolbar */}
@@ -970,6 +996,7 @@ export default function App() {
           setIsFeatureLockOpen(false);
           setCurrentView('pricing');
         }}
+        onActivateTrial={(!user?.trial_activated || user?.subscription_status === 'free') ? handleActivateFreeTrial : undefined}
       />
 
       {/* Sandbox Checkout Payment Modal */}

@@ -5,7 +5,8 @@ export default function PremiumFeatureLockModal({
   isOpen,
   featureKey = 'automatic_rescheduling',
   onClose,
-  onUpgradeClick
+  onUpgradeClick,
+  onActivateTrial
 }) {
   if (!isOpen) return null;
 
@@ -139,19 +140,32 @@ export default function PremiumFeatureLockModal({
 
         {/* CTA Buttons */}
         <div className="space-y-2 pt-1">
+          {onActivateTrial && (
+            <button
+              onClick={() => {
+                onClose();
+                onActivateTrial();
+              }}
+              className="w-full btn btn-primary text-xs font-black py-3 shadow-lg shadow-purple-500/25 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-pink-300" />
+              <span>🚀 Activate 7-Day Free Trial ($0.00)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={() => {
               onClose();
               onUpgradeClick();
             }}
-            className="w-full btn btn-primary text-xs font-extrabold py-3 shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2"
+            className="w-full btn btn-secondary text-xs font-extrabold py-2.5 flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Upgrade to Pro (₹49/mo)</span>
+            <span>View All Pro Plans & Pricing</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
-          <button onClick={onClose} className="w-full btn btn-secondary text-xs">
+          <button onClick={onClose} className="w-full text-center text-xs font-bold text-slate-400 hover:text-slate-600 py-1">
             Maybe Later
           </button>
         </div>
